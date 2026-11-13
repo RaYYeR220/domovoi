@@ -1,16 +1,83 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <link rel="icon" href="data:," />
-    <title>domovoi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="A house spirit moves into your real room and only changes things where you aren't looking. Frame it with your hands to catch it. Mixed reality for Meta Quest." />
+    <meta property="og:title" content="Domovoi" />
+    <meta property="og:description" content="It only moves things when you're not looking. Mixed reality for Meta Quest." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Crect width='18' height='18' rx='4' fill='%2317120d'/%3E%3Cpath d='M4 7V4h3M11 4h3v3M14 11v3h-3M7 14H4v-3' fill='none' stroke='%23ffb35c' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <title>Domovoi</title>
   </head>
-  <body style="margin: 0">
+  <body>
     <div id="scene-container"></div>
+    <div id="landing">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="lampglow"><stop offset="0" stop-color="#ffb35c" stop-opacity=".34"/><stop offset=".45" stop-color="#ffb35c" stop-opacity=".1"/><stop offset="1" stop-color="#ffb35c" stop-opacity="0"/></radialGradient>
+    <radialGradient id="cglow"><stop offset="0" stop-color="#ffb35c" stop-opacity=".42"/><stop offset=".4" stop-color="#ffb35c" stop-opacity=".12"/><stop offset="1" stop-color="#ffb35c" stop-opacity="0"/></radialGradient>
+    <linearGradient id="cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb35c" stop-opacity=".16"/><stop offset="1" stop-color="#ffb35c" stop-opacity="0"/></linearGradient>
+    <linearGradient id="gutter" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".5" stop-color="#000" stop-opacity=".18"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1611" stop-opacity="0"/><stop offset=".18" stop-color="#1c1611"/><stop offset="1" stop-color="#211912"/></linearGradient>
+  </defs>
+</svg>
+
+<main>
+<section class="hero" id="hero" aria-label="Domovoi">
+  <div class="grain"></div>
+  <header class="nav">
+    <a class="brand" href="#" aria-label="Domovoi home"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1.5 6V1.5H6M12 1.5h4.5V6M16.5 12v4.5H12M6 16.5H1.5V12"/></svg>Domovoi</a>
+    <a class="l" href="#how">How it plays</a>
+  </header>
+  <div class="center">
+    <p class="eyebrow rv" style="--d:.05s">Domovoi <span>for Meta Quest 3</span></p>
+    <h1 class="rv" style="--d:.12s">It only moves things when you’re <em>not&nbsp;looking.</em></h1>
+    <p class="sub rv" style="--d:.22s">A house spirit lives in your real room and rearranges things in your blind spots. Catch each change by framing it with your hands.</p>
+    <div class="ctas rv" style="--d:.3s">
+      <button class="btn" data-begin>Begin the night <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+      <a class="link" href="#how">How it plays</a>
+    </div>
+    <p class="proof rv" style="--d:.38s">Mixed reality · hands only · seated · 7 minutes</p>
+  </div>
+  <div class="band rv" id="band" style="--d:.2s" role="img" aria-label="Your room unrolled around your seat, 200 degrees from left to right. A 110 degree window shows what you can see; the spirit only changes things outside it.">
+    <div id="views"></div>
+    <div class="hud" aria-live="polite"><span><b id="moved">0</b> moved in your blind spot · <b id="seen">0</b> noticed<span id="toast"></span></span><span class="r" id="tip">Move your pointer to turn your head.</span></div>
+  </div>
+</section>
+
+<section id="how" class="how" aria-label="How it plays">
+  <ol class="steps">
+    <li class="rv"><span class="n">01</span><h3>Look away</h3><p>The domovoi only acts in your blind spot: outside your view, or behind your real furniture.</p></li>
+    <li class="rv" style="--d:.08s"><span class="n">02</span><h3>Look back</h3><p>Something is different. A cup has turned, a candle has lit itself, the clock says 3:33.</p></li>
+    <li class="rv" style="--d:.16s"><span class="n">03</span><h3>Frame it</h3><p>Make a frame with both hands. The spirit photograph pins itself to the board on your wall.</p></li>
+  </ol>
+  <div class="notes">
+    <p class="rv"><strong>Seated, and never behind you.</strong> Everything happens in the 200° in front of your chair. A new night every day; the spirit grows bolder and leaves small gifts.</p>
+    <p class="rv"><strong>Accessible.</strong> Eyes-only mode: hold your gaze on a change to take the photo, no hands needed. Every sound cue is captioned with the direction it came from.</p>
+    <p class="rv toggles"><button class="chip" data-setting="eyesOnly" aria-pressed="false">Eyes-only mode</button><button class="chip" data-setting="captions" aria-pressed="true">Sound captions</button></p>
+  </div>
+</section>
+</main>
+<footer class="foot" id="credits">
+  <span>Domovoi · mixed reality for Meta Quest 3</span>
+  <details><summary>Credits</summary><p>Props and sounds are CC0 (Poly Haven and other CC0 libraries). Built with IWSDK and three.js. Type: Fraunces and Figtree (OFL).</p></details>
+</footer>
+
+<dialog id="qdlg" aria-labelledby="qdlg-t">
+  <div class="qd">
+    <div class="qr" role="img" aria-label="QR code placeholder"><b></b><b></b><b></b><span>QR</span></div>
+    <div>
+      <h2 id="qdlg-t">Open this page in Meta Quest Browser</h2>
+      <p>Domovoi runs in your headset, straight from the browser. No install. Put on Quest 3, open Browser, then scan the code or type the link.</p>
+      <p class="qurl" id="qurl"></p>
+      <button data-close>Close</button>
+    </div>
+  </div>
+</dialog>
+
+    </div>
+    <script type="module" src="/src/landing/landing.ts"></script>
     <script type="module" src="/src/index.ts"></script>
   </body>
 </html>

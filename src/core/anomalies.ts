@@ -82,7 +82,7 @@ const prop = (kinds?: PropKind[]) => (c: Candidate) =>
 const real = (labels: RealLabel[]) => (c: Candidate) =>
   c.source === 'real' && !c.busy && c.label != null && labels.includes(c.label);
 
-const STATEFUL: PropKind[] = ['candle', 'lantern', 'frame'];
+const STATEFUL: PropKind[] = ['candle', 'lantern', 'frame', 'clock'];
 const FLIPPABLE: PropKind[] = ['teacup', 'milk-bowl', 'books', 'jug', 'toy', 'frame', 'clock', 'spectacles', 'spoon'];
 
 export const ANOMALIES: readonly AnomalyDef[] = [

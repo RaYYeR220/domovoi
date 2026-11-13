@@ -8,12 +8,14 @@ import {
   Box3,
   ContactShadow,
   CylinderGeometry,
+  DepthOccludable,
   type Entity,
   Group,
   MathUtils,
   Mesh,
   MeshStandardMaterial,
   type Object3D,
+  Quaternion,
   Vector3,
   type World,
 } from '@iwsdk/core';
@@ -98,8 +100,11 @@ export class Prop {
   /** 0..1 visibility (vanished = 0). */
   presence = 1;
   private tween: Tween | null = null;
-  /** Prop-specific state toggles (candle lit, frame tilted…). */
-  state = { lit: false, tilted: false };
+  /** Prop-specific state toggles (candle lit, frame tilted, clock jumped…). */
+  state = { lit: false, tilted: false, jumped: false };
+  /** Clock hands (alarm clock asset), with their resting rotations. */
+  private hands: { hour: Object3D; minute: Object3D; second: Object3D; rest: Quaternion[] } | null = null;
+  private tickClock = 0;
   private readonly stateHooks: Array<(s: Prop['state']) => void> = [];
 
   constructor(world: World, id: string, kind: PropKind, topId: string, at: V3, yaw: number) {
@@ -117,6 +122,14 @@ export class Prop {
       o.receiveShadow = false;
     });
     this.pivot.add(model);
+    if (kind === 'clock') {
+      const hour = model.getObjectByName('houd_hand') ?? model.getObjectByName('hour_hand');
+      const minute = model.getObjectByName('minute_hand');
+      const second = model.getObjectByName('second_hand');
+      if (hour && minute && second) {
+        this.hands = { hour, minute, second, rest: [hour.quaternion.clone(), minute.quaternion.clone(), second.quaternion.clone()] };
+      }
+    }
     const box = new Box3().setFromObject(model);
     const size = box.getSize(new Vector3());
     this.height = Math.max(0.02, size.y);
@@ -130,6 +143,8 @@ export class Prop {
 
     this.entity = world.createTransformEntity(this.root);
     this.entity.addComponent(SpiritThing, { thingId: id });
+    // Real objects in front (a vase, your hand) hide the spirit's things.
+    this.entity.addComponent(DepthOccludable);
     const shadow = world.createTransformEntity(new Group(), { parent: this.entity });
     shadow.object3D!.position.set(0, 0.002, 0);
     shadow.addComponent(ContactShadow, {
@@ -163,6 +178,17 @@ export class Prop {
     for (const fn of this.stateHooks) fn(this.state);
     // The picture "leans" when tilted.
     if (this.kind === 'frame') this.pivot.rotation.z = this.state.tilted ? MathUtils.degToRad(18) : 0;
+    // The clock: when it "jumps", the time is suddenly wrong and the second hand stops.
+    if (this.hands) {
+      const [h, m, s] = this.hands.rest;
+      this.hands.hour.quaternion.copy(h);
+      this.hands.minute.quaternion.copy(m);
+      this.hands.second.quaternion.copy(s);
+      if (this.state.jumped) {
+        this.hands.hour.quaternion.premultiply(FACE_TURN.setFromAxisAngle(FACE_AXIS, -MathUtils.degToRad(105)));
+        this.hands.minute.quaternion.premultiply(FACE_TURN.setFromAxisAngle(FACE_AXIS, -MathUtils.degToRad(160)));
+      }
+    }
   }
 
   /** Change instantly (the player isn't looking). */
@@ -182,10 +208,18 @@ export class Prop {
 
   restoreHome(dur = 0.8): void {
     this.animateTo(this.home, 1, dur);
-    this.setState({ lit: false, tilted: false });
+    this.setState({ lit: false, tilted: false, jumped: false });
   }
 
   update(dt: number): void {
+    // A real clock ticks: one step of the second hand a second (unless time has stopped).
+    if (this.hands && !this.state.jumped) {
+      this.tickClock += dt;
+      if (this.tickClock >= 1) {
+        this.tickClock -= 1;
+        this.hands.second.quaternion.premultiply(FACE_TURN.setFromAxisAngle(FACE_AXIS, -MathUtils.degToRad(6)));
+      }
+    }
     if (!this.tween) return;
     const tw = this.tween;
     tw.t = Math.min(1, tw.t + dt / tw.dur);
@@ -212,6 +246,9 @@ export class Prop {
     this.root.visible = presence > 0.01;
   }
 }
+
+const FACE_AXIS = new Vector3(0, 0, 1);
+const FACE_TURN = new Quaternion();
 
 function clonePose(p: Pose): Pose {
   return { pos: p.pos.clone(), yaw: p.yaw, scale: p.scale, flip: p.flip };

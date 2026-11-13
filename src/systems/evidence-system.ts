@@ -400,7 +400,7 @@ export class EvidenceSystem extends createSystem({
       case 'swap':
         return `${name}, swapped`;
       case 'state':
-        return prop?.kind === 'frame' ? `${name}, crooked` : `${name}, lit`;
+        return prop?.kind === 'frame' ? `${name}, crooked` : prop?.kind === 'clock' ? `${name}, hours ahead` : `${name}, lit`;
       case 'appear':
       case 'shelf-guest':
         return 'a visitor on the shelf';

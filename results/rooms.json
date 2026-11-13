@@ -1,0 +1,373 @@
+{
+  "summary": {
+    "generated": "2026-11-13",
+    "rooms": 8,
+    "furnished": 8,
+    "boards": 8,
+    "usedOwnShelves": 1,
+    "tricks": 19,
+    "tricksOnRealThings": 7,
+    "trickKindsSeen": 4
+  },
+  "rooms": [
+    {
+      "room": "sunlit_living_room",
+      "meshes": 14,
+      "planes": 15,
+      "tops": 9,
+      "syntheticShelves": 0,
+      "realThings": {
+        "couch": 2,
+        "lamp": 2,
+        "table": 3,
+        "plant": 1,
+        "shelf": 2,
+        "screen": 1,
+        "wall_art": 3,
+        "door_frame": 1,
+        "window_frame": 1
+      },
+      "props": 9,
+      "propBearingsDeg": [
+        -64,
+        -47,
+        -15,
+        0,
+        9,
+        18,
+        51,
+        75,
+        99
+      ],
+      "board": true,
+      "tricks": [
+        {
+          "id": "n1-t1",
+          "kind": "appear",
+          "target": "mesh-table-9"
+        },
+        {
+          "id": "n1-t2",
+          "kind": "vanish",
+          "target": "books-2"
+        },
+        {
+          "id": "n1-t3",
+          "kind": "shift",
+          "target": "clock-3"
+        }
+      ],
+      "caughtByProbe": 3,
+      "allowedTricks": 15
+    },
+    {
+      "room": "home_office",
+      "meshes": 9,
+      "planes": 13,
+      "tops": 6,
+      "syntheticShelves": 0,
+      "realThings": {
+        "table": 2,
+        "screen": 1,
+        "shelf": 2,
+        "couch": 1,
+        "plant": 1,
+        "wall_art": 2,
+        "window_frame": 1,
+        "door_frame": 1
+      },
+      "props": 9,
+      "propBearingsDeg": [
+        -67,
+        -41,
+        -19,
+        -4,
+        5,
+        19,
+        44,
+        73,
+        100
+      ],
+      "board": true,
+      "tricks": [
+        {
+          "id": "n1-t1",
+          "kind": "appear",
+          "target": "mesh-table-1"
+        },
+        {
+          "id": "n1-t2",
+          "kind": "vanish",
+          "target": "clock-3"
+        }
+      ],
+      "caughtByProbe": 2,
+      "allowedTricks": 14
+    },
+    {
+      "room": "conference_room",
+      "meshes": 12,
+      "planes": 12,
+      "tops": 10,
+      "syntheticShelves": 0,
+      "realThings": {
+        "shelf": 1,
+        "screen": 1,
+        "table": 1,
+        "wall_art": 1,
+        "window_frame": 3,
+        "door_frame": 1
+      },
+      "props": 9,
+      "propBearingsDeg": [
+        -43,
+        -31,
+        -18,
+        -10,
+        0,
+        9,
+        15,
+        28,
+        38
+      ],
+      "board": true,
+      "tricks": [
+        {
+          "id": "n1-t1",
+          "kind": "appear",
+          "target": "mesh-shelf-1"
+        },
+        {
+          "id": "n1-t2",
+          "kind": "vanish",
+          "target": "plant-4"
+        }
+      ],
+      "caughtByProbe": 2,
+      "allowedTricks": 13
+    },
+    {
+      "room": "open_office",
+      "meshes": 16,
+      "planes": 17,
+      "tops": 13,
+      "syntheticShelves": 0,
+      "realThings": {
+        "table": 2,
+        "plant": 2,
+        "shelf": 1,
+        "couch": 3,
+        "wall_art": 2,
+        "window_frame": 3,
+        "door_frame": 1
+      },
+      "props": 9,
+      "propBearingsDeg": [
+        -68,
+        -51,
+        -39,
+        -32,
+        -21,
+        -11,
+        11,
+        31,
+        46
+      ],
+      "board": true,
+      "tricks": [
+        {
+          "id": "n1-t1",
+          "kind": "appear",
+          "target": "mesh-table-1"
+        },
+        {
+          "id": "n1-t2",
+          "kind": "vanish",
+          "target": "jug-5"
+        },
+        {
+          "id": "n1-t3",
+          "kind": "state",
+          "target": "candle-0"
+        }
+      ],
+      "caughtByProbe": 3,
+      "allowedTricks": 13
+    },
+    {
+      "room": "kitchen",
+      "meshes": 16,
+      "planes": 14,
+      "tops": 13,
+      "syntheticShelves": 0,
+      "realThings": {
+        "table": 4,
+        "shelf": 3,
+        "lamp": 1,
+        "plant": 1,
+        "wall_art": 1,
+        "window_frame": 2,
+        "door_frame": 1
+      },
+      "props": 9,
+      "propBearingsDeg": [
+        -71,
+        -60,
+        -49,
+        -31,
+        -27,
+        -2,
+        26,
+        57,
+        82
+      ],
+      "board": true,
+      "tricks": [
+        {
+          "id": "n1-t1",
+          "kind": "appear",
+          "target": "mesh-table-1"
+        },
+        {
+          "id": "n1-t2",
+          "kind": "vanish",
+          "target": "teacup-1"
+        },
+        {
+          "id": "n1-t3",
+          "kind": "shift",
+          "target": "toy-6"
+        }
+      ],
+      "caughtByProbe": 3,
+      "allowedTricks": 14
+    },
+    {
+      "room": "bedroom",
+      "meshes": 11,
+      "planes": 14,
+      "tops": 6,
+      "syntheticShelves": 0,
+      "realThings": {
+        "bed": 1,
+        "table": 2,
+        "lamp": 3,
+        "shelf": 2,
+        "plant": 1,
+        "couch": 1,
+        "wall_art": 2,
+        "window_frame": 1,
+        "door_frame": 1
+      },
+      "props": 9,
+      "propBearingsDeg": [
+        -94,
+        -74,
+        -10,
+        -3,
+        16,
+        37,
+        57,
+        85,
+        99
+      ],
+      "board": true,
+      "tricks": [
+        {
+          "id": "n1-t1",
+          "kind": "appear",
+          "target": "mesh-table-4"
+        },
+        {
+          "id": "n1-t2",
+          "kind": "shift",
+          "target": "books-2"
+        }
+      ],
+      "caughtByProbe": 2,
+      "allowedTricks": 14
+    },
+    {
+      "room": "music_studio",
+      "meshes": 13,
+      "planes": 11,
+      "tops": 10,
+      "syntheticShelves": 0,
+      "realThings": {
+        "plant": 1,
+        "table": 2,
+        "lamp": 1,
+        "shelf": 1,
+        "couch": 1,
+        "window_frame": 1,
+        "door_frame": 1
+      },
+      "props": 9,
+      "propBearingsDeg": [
+        -81,
+        -55,
+        -31,
+        19,
+        31,
+        37,
+        62,
+        77,
+        88
+      ],
+      "board": true,
+      "tricks": [
+        {
+          "id": "n1-t1",
+          "kind": "appear",
+          "target": "mesh-table-4"
+        },
+        {
+          "id": "n1-t2",
+          "kind": "shift",
+          "target": "clock-3"
+        }
+      ],
+      "caughtByProbe": 2,
+      "allowedTricks": 13
+    },
+    {
+      "room": "open_studio",
+      "meshes": 3,
+      "planes": 9,
+      "tops": 1,
+      "syntheticShelves": 5,
+      "realThings": {
+        "plant": 1,
+        "wall_art": 1,
+        "window_frame": 1,
+        "door_frame": 1
+      },
+      "props": 8,
+      "propBearingsDeg": [
+        -75,
+        -35,
+        -27,
+        -23,
+        -17,
+        0,
+        35,
+        75
+      ],
+      "board": true,
+      "tricks": [
+        {
+          "id": "n1-t1",
+          "kind": "vanish",
+          "target": "clock-3"
+        },
+        {
+          "id": "n1-t2",
+          "kind": "vanish",
+          "target": "books-2"
+        }
+      ],
+      "caughtByProbe": 2,
+      "allowedTricks": 13
+    }
+  ]
+}

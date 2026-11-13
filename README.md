@@ -1,45 +1,104 @@
-# IWSDK App
+# Domovoi
 
-This project uses `iwsdk.config.json` for declarative scene, asset, component,
-XR, and emulator configuration. Application systems remain explicit in
-`src/index.ts`.
+**It only moves things when you're not looking.**
+
+You know your room. You'd notice if someone moved your teacup. Wouldn't you?
+
+Domovoi is a seated, hands-only mixed reality game for Meta Quest. A small house spirit, the *domovoi* of Slavic folklore, moves into your real room, sets its things out on your real furniture, and then plays with them, but only where you aren't looking. Turn your head and the candle on your coffee table lights itself. Look at the TV and a teacup behind you slides ten centimetres. Your real lamp switches on. Your window shows a night sky.
+
+Make a frame with your hands, the way a film director does, and photograph what changed. A caught change is put right, and its photo is pinned to an evidence board that hangs on your real wall and is still there tomorrow. Get to dawn before the room tips.
+
+A night takes about seven minutes. There is a new one every day, the same for everyone, played in each person's own room.
+
+**▶ Play:** open the link in **Meta Quest Browser** on a Quest 3 or 3S and press *Begin the night*. Nothing to install.
+
+---
+
+## Why it can only exist in mixed reality
+
+The game is built on one promise: **the spirit never changes anything you could have seen change.** That needs three things a headset knows and nothing else does:
+
+- **Where you are looking, and how wide you can see.** Every frame, the field of view is read from the headset's own projection matrices, not a constant. At any moment **36% of a seated player's surroundings is out of sight on Quest 3**. On Meta VR Glasses, with their narrower view, it's **61%**. The spirit gets bolder on narrower devices because it genuinely has more room to hide.
+- **What your room is made of.** Planes and labelled meshes from Space Setup become table tops, shelf tops and walls for the spirit's things. Your real lamp, screen, plant, wall art and windows become targets for its tricks. Big furniture hides what's behind it, so the spirit uses your couch as cover.
+- **Your hands.** The camera is two "L" shapes held up as a frame, a gesture everyone already knows. One-hand alternatives: look and pinch, or a thumb tap.
+
+Take the headset away and there's nothing left of the game. That's deliberate.
+
+## How a night goes
+
+1. **The spirit moves in.** It brings 8–9 household things (a candle, a teacup, books, a clock, a lantern…) and sets them out on your real surfaces, spread around you so some are always out of view.
+2. **Look away.** Out of your sight, it slides, turns, hides, swaps, lights or tips its things, lights your lamp, fills your screen with snow, makes your plant bloom. Each trick leaves one quiet sound where it happened.
+3. **Look back. Frame it.** Hold the frame still for half a second. The photo develops in front of you like a Polaroid and the change is put right.
+4. **Dawn.** Five unresolved changes and the room tips. Make it to dawn and the spirit settles down. Your streak grows, and as the spirit's trust grows it leaves you small gifts.
+
+Accusing something that didn't change emboldens the spirit. Its tricks get subtler as the night goes on and as the days go by.
+
+## Built for Meta VR Glasses, playable today on Quest 3
+
+- **Gaze + pinch.** Where the device reports eye gaze (Meta VR Glasses, emulators), you look and pinch. On Quest 3, the head direction stands in.
+- **Field of view.** All reading UI stays inside the Glasses' 58° × 54° design area. The blind-spot model uses the device's real projection: Meta VR Glasses report 37°/37° horizontally and 25° up, 43° down.
+- **Seated.** Everything happens in front of you and to your sides, nothing behind the chair. It passes the airplane-seat test.
+
+## Accessibility
+
+- **Eyes-only mode:** hold your gaze on something for a moment and it's photographed. No hand gestures at all. Looking around never counts against you.
+- **Sound captions:** each trick's sound also appears as a caption at the edge of your view, pointing to where it came from ("a creak, to your left").
+- **One hand is enough:** pinch or thumb-tap while looking, instead of the two-hand frame.
+
+## Persistent
+
+- The evidence board is held by a **persistent spatial anchor**. Tomorrow it's on the same wall.
+- Photos and progress (streak, trust, gifts) stay on the device (IndexedDB and local storage). There are no accounts and no servers.
+- **Share a night:** the dawn card shows a QR code for tonight's night. The same spirit with the same plan plays out differently in someone else's house.
+
+## Rooms nobody tuned for
+
+The spirit has to work in rooms it has never seen. Every built-in room of the Immersive Web Emulator was furnished and played by an automated run. None of them was hand-tuned.
+
+<!-- rooms:start -->
+**8 of 8 rooms furnished**, the evidence board hung in 8, 19 tricks played (4 different kinds, 7 on the room's own things). Generated 2026-11-13 by `tests/e2e/room-probe.mjs` + `npm run report`.
+
+| Room | Scene data | Real things the spirit can use | Props placed (bearing spread) | Tricks this room allows | Tricks seen in a 60 s probe |
+|---|---|---|---|---|---|
+| Sunlit living room | 14 meshes, 15 planes | couch ×2, lamp ×2, table ×3, plant, shelf ×2, screen, art ×3, door, window | 9 (-64° … 99°) | 15 of 15 | appear, vanish, shift |
+| Home office | 9 meshes, 13 planes | table ×2, screen, shelf ×2, couch, plant, art ×2, window, door | 9 (-67° … 100°) | 14 of 15 | appear, vanish |
+| Conference room | 12 meshes, 12 planes | shelf, screen, table, art, window ×3, door | 9 (-43° … 38°) | 13 of 15 | appear, vanish |
+| Open office | 16 meshes, 17 planes | table ×2, plant ×2, shelf, couch ×3, art ×2, window ×3, door | 9 (-68° … 46°) | 13 of 15 | appear, vanish, state |
+| Kitchen | 16 meshes, 14 planes | table ×4, shelf ×3, lamp, plant, art, window ×2, door | 9 (-71° … 82°) | 14 of 15 | appear, vanish, shift |
+| Bedroom | 11 meshes, 14 planes | bed, table ×2, lamp ×3, shelf ×2, plant, couch, art ×2, window, door | 9 (-94° … 99°) | 14 of 15 | appear, shift |
+| Music studio | 13 meshes, 11 planes | plant, table ×2, lamp, shelf, couch, window, door | 9 (-81° … 88°) | 13 of 15 | appear, shift |
+| Open studio | 3 meshes, 9 planes | plant, art, window, door | 8 (own shelves ×5) (-75° … 75°) | 13 of 15 | vanish |
+<!-- rooms:end -->
+
+## Under the hood
+
+- **Immersive Web SDK** (Meta, WebXR): passthrough MR, plane and mesh detection with semantic labels, hand tracking, gaze tracking, anchors, spatial audio.
+- **Engine-free game core** (`src/core/`) with unit tests:
+  - `attention`: field of view from projection matrices, blind spots, occlusion by furniture.
+  - `night`: a deterministic director over a daily seed.
+  - `frame-gesture`: two-hand L-frame detection, tested against the emulator's own hand poses.
+  - `placement`: spots on real furniture for a seated player.
+  - `progress`: daily nights, streak, trust, gifts, share links.
+- **XR layer** (`src/game/`, `src/systems/`): reads the room, places and animates props, renders the tricks, takes the spirit photographs, runs the HUD and the sound.
+- **Spirit photographs:** web apps can't read passthrough pixels, so the photo is rendered from your eye through the hand frame. It shows the scanned room mesh in warm sepia with the spirit's things in it, in the manner of Victorian spirit photography.
+
+### Run it
 
 ```sh
 npm install
-npm run dev
+npm run dev          # emulator + HTTPS dev server
+npm test             # unit tests
+npm run build        # static build in dist/
 ```
 
-Use the Runtime and Editor controls in the managed browser to switch between
-the running experience and its authored scene.
+Handy URL flags: `?length=90` gives a 90-second night, `?eyes=1` turns on eyes-only mode, `?fov=glasses` applies the Meta VR Glasses field of view in emulators, and `?night=<code>` plays a shared night.
 
-## Starter content
+## Honest limits
 
-The robot and welcome panel are small examples of authored scene content plus
-runtime systems. The robot turns toward the player's head and plays a sound
-when pressed. To remove the robot, delete its scene node, its `RobotSystem`
-registration from `src/index.ts` or `src/index.js`, and its `Robot` registration
-from `src/components.ts` or `src/components.js`; you can then delete the unused
-robot component and system files. To remove the welcome panel, delete its scene
-node and its `PanelSystem` registration from the application entry point.
+- The two-hand frame is tuned against the emulator's hand model. If hand tracking struggles in your light, use look-and-pinch or a thumb tap.
+- Persistent anchors are per device and per browser profile. Clearing site data resets the board's spot.
+- The spirit's best tricks need a room scan (Space Setup). Without one it hangs a few little shelves of its own in front of you.
 
-The robot stands on the second of three numbered stations. The first holds dark
-pieces you can grab and move, and the third holds a ring you can spin in place.
-The studio props (the plinths and the dark pieces, plus the floor and stage in VR
-and Desktop 3D) are built in code in `src/scene-assets/studio.scene-asset.ts` or
-`.js`. The VR and Desktop 3D background furniture is built the same way in
-`src/scene-assets/decor.scene-asset.ts` or `.js`, so the starter downloads no
-extra models. To remove any of them, delete their scene nodes and their entries
-in `src/assets.ts` or `src/assets.js`, then delete the files you no longer use.
-The station labels are `public/ui/label-*.uikitml`.
+## Credits
 
-The rest of the look is built-in components in the scene, which you can edit in
-the editor without code. The soft light on every object is the scene root's
-`IBLGradient` (select the Level Root to edit it), and the soft shadows under
-each object are `ContactShadow` nodes. In VR and Desktop 3D, the sky is the
-scene root's `DomeGradient` (its colors, tilt and dither are also on the Level
-Root), and the floor fades into it through the `DomeFade` on the floor node. AR
-projects have no sky or floor, so passthrough stays visible, and a
-`ShadowCatcher` node grounds the stations.
-
-- Minimal scene walkthrough: https://iwsdk.dev/guides/01b-minimal-scene.html
-- XR-enabled projects — IWER emulator controls: https://iwsdk.dev/guides/02-testing-experience.html#iwer-controls
+3D models and sounds are CC0. See [CREDITS.md](CREDITS.md). Code is MIT licensed.

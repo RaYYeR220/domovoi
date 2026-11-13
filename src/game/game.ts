@@ -341,6 +341,7 @@ export class Game {
       case 'state':
         if (!prop) return false;
         if (prop.kind === 'frame') prop.setState({ tilted: true });
+        else if (prop.kind === 'clock') prop.setState({ jumped: true });
         else prop.setState({ lit: true });
         this.focus.set(plan.id, [prop.center]);
         return true;
