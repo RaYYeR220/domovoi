@@ -18,6 +18,8 @@ Every statement on the project page, tagged with how it's backed.
 | Real eye gaze is used where the device provides it | VERIFIED-EMULATOR | Meta VR Glasses emulator profile reports `gaze=eyes` |
 | Tricks on the player's own lamp, screen, plant, wall art, window and shelves | VERIFIED-EMULATOR | `results/rooms.json` (tricks per room), screenshots |
 | Works in rooms we never tuned for | VERIFIED-EMULATOR | room sweep over every built-in emulator room → `results/rooms.json` |
+| The board hangs on a free stretch of real wall (no picture, window or door under it, no lamp or bookcase in front, clear line of sight) | REPRODUCIBLE + VERIFIED-EMULATOR | `src/core/board-spot.test.ts`; `tests/e2e/room-probe.mjs` → `board: "wall"` in all 8 rooms of `results/rooms.json` |
+| Eyes-only dwell takes a photo only when something there changed | REPRODUCIBLE | `src/systems/game-system.ts` `updateDwell`, `Game.snapGaze(…, forgiving)` |
 | Evidence board returns to the same wall next session | BY DESIGN | IWSDK persistent anchor + saved anchor-relative pose (`src/systems/evidence-system.ts`); persistence needs a device |
 | Holds 72 fps on Quest 3 | BY DESIGN | Small draw-call budget, no shadows or post-processing, no per-frame allocation in hot paths. Not measured on hardware |
 | Same daily night for everyone; share links replay a night | REPRODUCIBLE | `src/core/progress.test.ts`, `src/core/night.test.ts` (determinism) |

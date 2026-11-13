@@ -25,10 +25,10 @@
 | gaze interactions | IWSDK gaze tracking; WebXR eye-gaze input used for photos and eyes-only dwell; head fallback on Quest 3 (`src/systems/game-system.ts`) |
 | hand tracking | 25-joint reading with `fillPoses`; custom L-frame recogniser + shutter dwell (`src/core/frame-gesture.ts`, tested on emulator poses); pinch and microgesture thumb tap |
 | passthrough · scene understanding (MRUK equivalent on web) | Plane and mesh detection with semantic labels → furniture boxes, tops, panels, occluders (`src/game/room.ts`) |
-| anchoring content to planes, surfaces, room geometry | Props on real tops with contact shadows; overlays on real lamps, screens, windows and art; the board on a free stretch of real wall |
+| anchoring content to planes, surfaces, room geometry | Props on real tops with contact shadows; overlays on real lamps, screens, windows and art; the board on a free stretch of real wall: nothing hanging there, nothing standing in front, nothing between you and it (`src/core/board-spot.ts`, on a real wall in 8 of 8 emulator rooms) |
 | spatial anchoring | IWSDK persistent anchor; board pose saved relative to it |
 | holding up in rooms the developer never tested | Automated sweep of every built-in emulator room (`tests/e2e/room-probe.mjs` → `results/rooms.json`) |
-| reliability | 56 unit tests; end-to-end nights in the emulator (`tests/e2e/`); fallbacks for no room scan (spirit's own shelves), no walls (free-standing board), no hands (eyes-only), no storage (night still plays) |
+| reliability | 70 unit tests; end-to-end nights in the emulator (`tests/e2e/`); fallbacks for no room scan (spirit's own shelves), no walls (free-standing board), no hands (eyes-only), no storage (night still plays) |
 | performant (≥ 60 fps) | No shadows or post-processing; procedural visuals of ~1 draw call each; allocation-free hot paths; 72 Hz target |
 
 ## Polish & Presentation

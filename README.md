@@ -47,7 +47,7 @@ Accusing something that didn't change emboldens the spirit. Its tricks get subtl
 
 ## Persistent
 
-- The evidence board is held by a **persistent spatial anchor**. Tomorrow it's on the same wall.
+- The evidence board hangs on a free stretch of your real wall: nothing hanging there, nothing standing in front of it, nothing between you and it. It's held by a **persistent spatial anchor**, so tomorrow it's on the same wall.
 - Photos and progress (streak, trust, gifts) stay on the device (IndexedDB and local storage). There are no accounts and no servers.
 - **Share a night:** the dawn card shows a QR code for tonight's night. The same spirit with the same plan plays out differently in someone else's house.
 
@@ -56,17 +56,17 @@ Accusing something that didn't change emboldens the spirit. Its tricks get subtl
 The spirit has to work in rooms it has never seen. Every built-in room of the Immersive Web Emulator was furnished and played by an automated run. None of them was hand-tuned.
 
 <!-- rooms:start -->
-**8 of 8 rooms furnished**, the evidence board hung in 8, 19 tricks played (4 different kinds, 7 on the room's own things). Generated 2026-11-13 by `tests/e2e/room-probe.mjs` + `npm run report`.
+**8 of 8 rooms furnished**, the evidence board hung on a real wall in 8, 20 tricks played (5 different kinds, 7 on the room's own things). Generated 2026-11-13 by `tests/e2e/room-probe.mjs` + `npm run report`.
 
 | Room | Scene data | Real things the spirit can use | Props placed (bearing spread) | Tricks this room allows | Tricks seen in a 60 s probe |
 |---|---|---|---|---|---|
-| Sunlit living room | 14 meshes, 15 planes | couch ×2, lamp ×2, table ×3, plant, shelf ×2, screen, art ×3, door, window | 9 (-64° … 99°) | 15 of 15 | appear, vanish, shift |
-| Home office | 9 meshes, 13 planes | table ×2, screen, shelf ×2, couch, plant, art ×2, window, door | 9 (-67° … 100°) | 14 of 15 | appear, vanish |
+| Sunlit living room | 14 meshes, 15 planes | couch ×2, lamp ×2, table ×3, plant, shelf ×2, screen, art ×3, door, window | 9 (-64° … 99°) | 15 of 15 | appear, vanish |
+| Home office | 9 meshes, 13 planes | table ×2, screen, shelf ×2, couch, plant, art ×2, window, door | 9 (-67° … 100°) | 14 of 15 | appear, vanish, state |
 | Conference room | 12 meshes, 12 planes | shelf, screen, table, art, window ×3, door | 9 (-43° … 38°) | 13 of 15 | appear, vanish |
-| Open office | 16 meshes, 17 planes | table ×2, plant ×2, shelf, couch ×3, art ×2, window ×3, door | 9 (-68° … 46°) | 13 of 15 | appear, vanish, state |
-| Kitchen | 16 meshes, 14 planes | table ×4, shelf ×3, lamp, plant, art, window ×2, door | 9 (-71° … 82°) | 14 of 15 | appear, vanish, shift |
-| Bedroom | 11 meshes, 14 planes | bed, table ×2, lamp ×3, shelf ×2, plant, couch, art ×2, window, door | 9 (-94° … 99°) | 14 of 15 | appear, shift |
-| Music studio | 13 meshes, 11 planes | plant, table ×2, lamp, shelf, couch, window, door | 9 (-81° … 88°) | 13 of 15 | appear, shift |
+| Open office | 16 meshes, 17 planes | table ×2, plant ×2, shelf, couch ×3, art ×2, window ×3, door | 9 (-68° … 46°) | 13 of 15 | appear, vanish, shift |
+| Kitchen | 16 meshes, 14 planes | table ×4, shelf ×3, lamp, plant, art, window ×2, door | 9 (-71° … 82°) | 14 of 15 | appear, shift |
+| Bedroom | 11 meshes, 14 planes | bed, table ×2, lamp ×3, shelf ×2, plant, couch, art ×2, window, door | 9 (-94° … 99°) | 14 of 15 | shift, vanish, lamp-on |
+| Music studio | 13 meshes, 11 planes | plant, table ×2, lamp, shelf, couch, window, door | 9 (-81° … 88°) | 13 of 15 | vanish |
 | Open studio | 3 meshes, 9 planes | plant, art, window, door | 8 (own shelves ×5) (-75° … 75°) | 13 of 15 | vanish |
 <!-- rooms:end -->
 
