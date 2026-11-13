@@ -3,12 +3,12 @@
 ## On a Quest 3 / 3S
 
 1. Sit somewhere you can see a table or a shelf. If the headset has never scanned this room, Space Setup helps the spirit a lot. Without it, the spirit hangs a few little shelves of its own.
-2. Open **LIVE_URL** in Meta Quest Browser and press **Begin the night**. Allow hand tracking and spatial data when asked.
+2. Open **https://rayyer220.github.io/domovoi/** in Meta Quest Browser and press **Begin the night**. Allow hand tracking and spatial data when asked.
 3. Watch the spirit set its things out around you. You don't need to read anything; the hint below your view tells you the two moves.
 4. **Look away** (to the side, not behind you). Within a few seconds, something changes where you weren't looking.
 5. **Look back and make a frame** with both hands (thumbs and index fingers in an L, like a film director). Hold it still for half a second. The photo develops in front of you, the change is put right, and the photo flies to the cork board on your wall.
    - One-hand alternative: look at the change and pinch, or tap your thumb on your index finger.
-6. A full night is about 7 minutes. For a quicker look, open **LIVE_URL?length=90** for a 90-second night that ends at dawn with the result card.
+6. A full night is about 7 minutes. For a quicker look, open **https://rayyer220.github.io/domovoi/?length=90** for a 90-second night that ends at dawn with the result card.
 
 ## Things worth trying
 
