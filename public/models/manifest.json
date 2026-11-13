@@ -1,0 +1,184 @@
+[
+  {
+    "file": "teacup.glb",
+    "title": "Teacup on saucer",
+    "sizeKB": 316,
+    "triangles": 7036,
+    "bboxMeters": [
+      0.149,
+      0.0709,
+      0.1536
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "milk-bowl.glb",
+    "title": "Wooden bowl",
+    "sizeKB": 266,
+    "triangles": 4666,
+    "bboxMeters": [
+      0.1307,
+      0.0731,
+      0.1245
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "candlestick.glb",
+    "title": "Wooden candlestick",
+    "sizeKB": 501,
+    "triangles": 8519,
+    "bboxMeters": [
+      0.0972,
+      0.2196,
+      0.0986
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "alarm-clock.glb",
+    "title": "Alarm clock",
+    "sizeKB": 463,
+    "triangles": 8985,
+    "bboxMeters": [
+      0.1317,
+      0.1742,
+      0.0667
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "potted-plant.glb",
+    "title": "Potted succulent",
+    "sizeKB": 565,
+    "triangles": 8929,
+    "bboxMeters": [
+      0.1679,
+      0.2675,
+      0.1848
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "book-stack.glb",
+    "title": "Stack of books",
+    "sizeKB": 536,
+    "triangles": 10120,
+    "bboxMeters": [
+      0.2653,
+      0.0905,
+      0.1945
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "picture-frame.glb",
+    "title": "Standing picture frame",
+    "sizeKB": 180,
+    "triangles": 1634,
+    "bboxMeters": [
+      0.2008,
+      0.2497,
+      0.1003
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "shelf"
+  },
+  {
+    "file": "milk-jug.glb",
+    "title": "Ceramic jug",
+    "sizeKB": 219,
+    "triangles": 5770,
+    "bboxMeters": [
+      0.2753,
+      0.2113,
+      0.1675
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "wooden-elephant.glb",
+    "title": "Carved wooden elephant",
+    "sizeKB": 160,
+    "triangles": 2752,
+    "bboxMeters": [
+      0.1092,
+      0.0962,
+      0.0576
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "shelf"
+  },
+  {
+    "file": "lantern.glb",
+    "title": "Brass lantern",
+    "sizeKB": 552,
+    "triangles": 12583,
+    "bboxMeters": [
+      0.1221,
+      0.2942,
+      0.097
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "pocket-watch.glb",
+    "title": "Pocket watch",
+    "sizeKB": 516,
+    "triangles": 16098,
+    "bboxMeters": [
+      0.0613,
+      0.0136,
+      0.0799
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "spectacles.glb",
+    "title": "Round spectacles",
+    "sizeKB": 429,
+    "triangles": 11810,
+    "bboxMeters": [
+      0.1578,
+      0.0463,
+      0.149
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "apple.glb",
+    "title": "Apple",
+    "sizeKB": 219,
+    "triangles": 7012,
+    "bboxMeters": [
+      0.0976,
+      0.0854,
+      0.0959
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  },
+  {
+    "file": "wooden-spoon.glb",
+    "title": "Wooden spoon",
+    "sizeKB": 223,
+    "triangles": 6576,
+    "bboxMeters": [
+      0.0867,
+      0.0251,
+      0.2776
+    ],
+    "pivotAtBottom": true,
+    "suggestedSurface": "table"
+  }
+]

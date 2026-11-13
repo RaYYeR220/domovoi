@@ -230,7 +230,9 @@ const PREFERRED: Record<PropKind, Furniture['label'][]> = {
   toy: ['couch', 'bed', 'table', 'shelf'],
   lantern: ['shelf', 'table', 'storage'],
   apple: ['table'],
-  key: ['table', 'shelf'],
+  spectacles: ['table', 'shelf', 'storage'],
+  watch: ['table', 'shelf', 'storage'],
+  spoon: ['table'],
 };
 
 export interface Placement {

@@ -72,7 +72,7 @@ describe('Night', () => {
     const night = new Night({ seed: 9, nightIndex: 1, firstKind: 'state' });
     const first = tricksOf(run(night, fakeRoom(), 30))[0];
     expect(first.kind).toBe('state');
-    expect(['candle', 'books', 'clock']).toContain(first.targetId);
+    expect(first.targetId).toBe('candle');
   });
 
   it('only uses tricks the spirit has learned by this night', () => {

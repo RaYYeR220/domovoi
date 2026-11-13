@@ -1,0 +1,154 @@
+[
+  {
+    "file": "clock-tick-loop.ogg",
+    "title": "Clock tick loop",
+    "durationSec": 6.4,
+    "loop": true,
+    "mono": true,
+    "sizeKB": 73.8
+  },
+  {
+    "file": "wood-creak.mp3",
+    "title": "Soft wooden creak",
+    "durationSec": 0.6,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 7.7
+  },
+  {
+    "file": "catch-chime.mp3",
+    "title": "Small bell catch chime",
+    "durationSec": 1.08,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 13.5
+  },
+  {
+    "file": "shutter.mp3",
+    "title": "Camera shutter",
+    "durationSec": 0.28,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 4
+  },
+  {
+    "file": "polaroid.mp3",
+    "title": "Instant camera shutter and print eject",
+    "durationSec": 2.68,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 32.2
+  },
+  {
+    "file": "paper-flutter.mp3",
+    "title": "Paper flutter",
+    "durationSec": 0.71,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 9.2
+  },
+  {
+    "file": "pin-cork.mp3",
+    "title": "Pin pushed into cork",
+    "durationSec": 0.15,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 2.5
+  },
+  {
+    "file": "cup-clink.mp3",
+    "title": "Ceramic cup clink",
+    "durationSec": 0.49,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 6.5
+  },
+  {
+    "file": "cloth-rustle.mp3",
+    "title": "Cloth rustle",
+    "durationSec": 0.6,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 7.7
+  },
+  {
+    "file": "lamp-click.mp3",
+    "title": "Lamp switch click",
+    "durationSec": 0.14,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 2.5
+  },
+  {
+    "file": "shimmer.mp3",
+    "title": "Soft magical shimmer",
+    "durationSec": 3.08,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 37.1
+  },
+  {
+    "file": "bell-tree.mp3",
+    "title": "Bell tree sparkle",
+    "durationSec": 1.38,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 16.9
+  },
+  {
+    "file": "door-knock.mp3",
+    "title": "Distant gentle door knock",
+    "durationSec": 0.81,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 10.1
+  },
+  {
+    "file": "dawn-birdsong.mp3",
+    "title": "Dawn birdsong",
+    "durationSec": 8,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 94.6
+  },
+  {
+    "file": "night-crickets-loop.ogg",
+    "title": "Night crickets loop",
+    "durationSec": 8,
+    "loop": true,
+    "mono": true,
+    "sizeKB": 74.7
+  },
+  {
+    "file": "room-tone-loop.ogg",
+    "title": "Quiet room tone loop",
+    "durationSec": 8,
+    "loop": true,
+    "mono": true,
+    "sizeKB": 78.8
+  },
+  {
+    "file": "tee-hee.mp3",
+    "title": "Playful glockenspiel giggle",
+    "durationSec": 1.22,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 15
+  },
+  {
+    "file": "xylophone-blink.mp3",
+    "title": "Xylophone blink",
+    "durationSec": 0.56,
+    "loop": false,
+    "mono": true,
+    "sizeKB": 7.4
+  },
+  {
+    "file": "music-box-loop.ogg",
+    "title": "Music box melody loop",
+    "durationSec": 16,
+    "loop": true,
+    "mono": true,
+    "sizeKB": 113.1
+  }
+]

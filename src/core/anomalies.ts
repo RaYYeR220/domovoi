@@ -18,7 +18,9 @@ export type PropKind =
   | 'toy'
   | 'lantern'
   | 'apple'
-  | 'key';
+  | 'spectacles'
+  | 'watch'
+  | 'spoon';
 
 /** Semantic labels Quest reports for real furniture and room parts. */
 export type RealLabel =
@@ -80,14 +82,14 @@ const prop = (kinds?: PropKind[]) => (c: Candidate) =>
 const real = (labels: RealLabel[]) => (c: Candidate) =>
   c.source === 'real' && !c.busy && c.label != null && labels.includes(c.label);
 
-const STATEFUL: PropKind[] = ['candle', 'clock', 'books', 'frame', 'lantern'];
-const FLIPPABLE: PropKind[] = ['teacup', 'milk-bowl', 'books', 'jug', 'toy', 'frame', 'clock'];
+const STATEFUL: PropKind[] = ['candle', 'lantern', 'frame'];
+const FLIPPABLE: PropKind[] = ['teacup', 'milk-bowl', 'books', 'jug', 'toy', 'frame', 'clock', 'spectacles', 'spoon'];
 
 export const ANOMALIES: readonly AnomalyDef[] = [
   { kind: 'vanish', subtlety: 1, unlockNight: 1, arity: 1, appliesTo: prop() },
   { kind: 'appear', subtlety: 1, unlockNight: 1, arity: 1, appliesTo: (c) => c.source === 'real' && !c.busy && (c.label === 'table' || c.label === 'shelf' || c.label === 'storage') },
   { kind: 'shift', subtlety: 2, unlockNight: 1, arity: 1, appliesTo: prop() },
-  { kind: 'turn', subtlety: 3, unlockNight: 1, arity: 1, appliesTo: prop(['teacup', 'jug', 'toy', 'clock', 'frame', 'books', 'lantern', 'milk-bowl']) },
+  { kind: 'turn', subtlety: 3, unlockNight: 1, arity: 1, appliesTo: prop(['teacup', 'jug', 'toy', 'clock', 'frame', 'books', 'lantern', 'milk-bowl', 'spectacles', 'watch', 'spoon']) },
   { kind: 'state', subtlety: 2, unlockNight: 1, arity: 1, appliesTo: prop(STATEFUL) },
   { kind: 'lamp-on', subtlety: 1, unlockNight: 1, arity: 1, appliesTo: real(['lamp']) },
   { kind: 'flip', subtlety: 2, unlockNight: 2, arity: 1, appliesTo: prop(FLIPPABLE) },
