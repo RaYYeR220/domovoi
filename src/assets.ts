@@ -25,10 +25,4 @@ export default defineAssets({
   'prop-spectacles': model('spectacles.glb', 'Spectacles'),
   'prop-watch': model('pocket-watch.glb', 'Pocket watch'),
   'prop-spoon': model('wooden-spoon.glb', 'Wooden spoon'),
-  'env-studio': {
-    url: url('models/brown-photostudio-02-1k.hdr'),
-    type: AssetType.HDRTexture,
-    name: 'Studio light',
-    priority: 'critical',
-  },
 });

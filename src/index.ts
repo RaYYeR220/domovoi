@@ -27,7 +27,13 @@ World.create(document.getElementById('scene-container') as HTMLDivElement, proje
 
   // The start page's button and settings talk to the game through these.
   const hooks = window as unknown as PageHooks;
-  hooks.__beginXR = () => world.launchXR();
+  hooks.__beginXR = async () => {
+    // Desktop browsers may expose WebXR without any mixed-reality runtime behind it.
+    const xr = (navigator as Navigator & { xr?: XRSystem }).xr;
+    const supported = xr ? await xr.isSessionSupported('immersive-ar').catch(() => false) : false;
+    if (!supported) throw new Error('Mixed reality is not available in this browser');
+    return world.launchXR();
+  };
   hooks.__setSetting = (key, value) => {
     const game = world.globals.game as Game | undefined;
     if (game) game.save.settings[key] = value;

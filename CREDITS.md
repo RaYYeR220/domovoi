@@ -21,7 +21,6 @@ Domovoi uses the following third-party assets. Every asset listed here is dedica
 
 ### Environment lighting
 
-- `brown-photostudio-02-1k.hdr` — Brown Photostudio 02 — Sergej Majboroda (Poly Haven) — https://polyhaven.com/a/brown_photostudio_02 — CC0 1.0
 
 ## Sounds
 
