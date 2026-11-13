@@ -55,7 +55,7 @@ const summary = {
   generated: new Date().toISOString().slice(0, 10),
   rooms: rooms.length,
   furnished: rooms.filter((r) => r.props >= 5).length,
-  boards: rooms.filter((r) => r.board).length,
+  boards: rooms.filter((r) => r.board === 'wall').length,
   usedOwnShelves: rooms.filter((r) => r.syntheticShelves > 0).length,
   tricks: rooms.reduce((n, r) => n + r.tricks.length, 0),
   tricksOnRealThings: rooms.reduce((n, r) => n + r.tricks.filter((t) => REAL_TRICKS.has(t.kind)).length, 0),
@@ -72,7 +72,7 @@ const realList = (r) =>
     .map(([k, v]) => `${k.replace('_frame', '').replace('wall_art', 'art')}${v > 1 ? ` ×${v}` : ''}`)
     .join(', ') || 'none';
 const lines = [
-  `**${summary.furnished} of ${summary.rooms} rooms furnished**, the evidence board hung in ${summary.boards}, ${summary.tricks} tricks played (${summary.trickKindsSeen} different kinds, ${summary.tricksOnRealThings} on the room's own things). Generated ${summary.generated} by \`tests/e2e/room-probe.mjs\` + \`npm run report\`.`,
+  `**${summary.furnished} of ${summary.rooms} rooms furnished**, the evidence board hung on a real wall in ${summary.boards}, ${summary.tricks} tricks played (${summary.trickKindsSeen} different kinds, ${summary.tricksOnRealThings} on the room's own things). Generated ${summary.generated} by \`tests/e2e/room-probe.mjs\` + \`npm run report\`.`,
   '',
   '| Room | Scene data | Real things the spirit can use | Props placed (bearing spread) | Tricks this room allows | Tricks seen in a 60 s probe |',
   '|---|---|---|---|---|---|',

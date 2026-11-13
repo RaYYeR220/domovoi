@@ -303,7 +303,9 @@ export class FxSystem extends createSystem({}) {
         return null;
     }
     // Never let a change appear where the player can see it happen.
-    if (isInView(this.game.head, this.game.fov, focus, Math.max(real.size.x, real.size.y) * 0.5, 9 * DEG)) {
+    // The change is where the effect draws (a glow, a screen, a twin frame), not the whole object.
+    const effectRadius = Math.min(0.35, Math.max(real.size.x, real.size.y) * 0.5);
+    if (isInView(this.game.head, this.game.fov, focus, effectRadius, 9 * DEG)) {
       visual.dispose();
       return null;
     }

@@ -53,6 +53,7 @@ export class GameSystem extends createSystem({
   private frameDt = 1 / 72;
   private dwellId: string | null = null;
   private dwellTime = 0;
+  private dwellSettled = false;
 
   init(): void {
     this.game = new Game(this.world);
@@ -184,15 +185,19 @@ export class GameSystem extends createSystem({
     if (!hit || hit.id !== this.dwellId) {
       this.dwellId = hit?.id ?? null;
       this.dwellTime = 0;
-    } else {
+      this.dwellSettled = false;
+    } else if (!this.dwellSettled) {
       this.dwellTime += dt;
     }
     this.dwellState.targetId = this.dwellId;
     this.dwellState.at = hit?.at ?? null;
     this.dwellState.progress = Math.max(0, Math.min(1, this.dwellTime / 1.6));
     if (this.dwellTime >= 1.6 && hit) {
-      game.snapGaze(this.gaze.origin, this.gaze.dir, 6 * (Math.PI / 180), true);
-      this.dwellTime = -2; // a pause before the next dwell photo
+      const shot = game.snapGaze(this.gaze.origin, this.gaze.dir, 6 * (Math.PI / 180), true);
+      // After a photo, a pause before the next one. After a quiet look (nothing
+      // changed there) the ring rests until the eyes move on to something else.
+      this.dwellTime = shot ? -2 : 0;
+      this.dwellSettled = !shot;
     }
   }
 

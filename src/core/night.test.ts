@@ -118,6 +118,26 @@ describe('Night', () => {
     }
   });
 
+  it('a quiet night keeps time but only plays the changes it is given', () => {
+    const night = new Night({ seed: 5, nightIndex: 3, duration: 60 });
+    night.quiet = true;
+    const room = fakeRoom();
+    const plan: AnomalyPlan = { id: 'x1', kind: 'turn', targetId: 'books', params: { yaw: 1 }, subtlety: 1, at: 0 };
+    night.inject(plan);
+    let tricks = 0;
+    let end: NightEvent | undefined;
+    for (let t = 0; t < 70 && !end; t += 0.5) {
+      for (const e of night.tick(0.5, room)) {
+        if (e.type === 'trick') tricks++;
+        if (e.type === 'end') end = e;
+      }
+      if (t === 10) night.report(['books']);
+    }
+    expect(tricks).toBe(0);
+    expect(end?.type === 'end' && end.result.status).toBe('won');
+    expect(end?.type === 'end' && end.result.missed).toBe(0);
+  });
+
   it('gets bolder through the night (shorter gaps late)', () => {
     const night = new Night({ seed: 8, nightIndex: 2, loseAt: 999 });
     const room = fakeRoom();

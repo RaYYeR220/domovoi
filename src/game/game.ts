@@ -104,6 +104,8 @@ export class Game {
   realEffects: RealEffects | null = null;
   /** Where the evidence board hangs (set once it is up). */
   boardAt: V3 | null = null;
+  /** Hung on a real wall (false: no free wall, it stands in the air in front of you). */
+  boardOnWall = false;
   /** Where each active trick can be seen (for framing). */
   private readonly focus = new Map<string, V3[]>();
   private readonly guestProps = new Map<string, Prop>();
@@ -196,6 +198,7 @@ export class Game {
 
     if (this.phase === 'arrival') this.updateArrival(dt);
     if (this.phase === 'night' && this.night) {
+      this.night.quiet = this.held;
       for (const e of this.night.tick(dt, this.roomView)) this.onNightEvent(e);
     }
   }
@@ -487,10 +490,17 @@ export class Game {
     this.report(ids, frame, eye, dir);
   }
 
-  /** A photo along the gaze (pinch or eyes-only fallback). */
-  snapGaze(eye: V3, dir: V3, halfAngle = 7 * DEG, forgiving = false): void {
+  /**
+   * A photo along the gaze (pinch or eyes-only fallback). An eyes-only dwell is
+   * just looking: it takes a photo only when something there has changed, so
+   * resting your eyes on the room never fills the board with empty pictures.
+   * Returns whether a photo was taken.
+   */
+  snapGaze(eye: V3, dir: V3, halfAngle = 7 * DEG, forgiving = false): boolean {
     const ids = this.framed((p) => coneContains(eye, dir, p, halfAngle));
+    if (forgiving && !this.anyChanged(ids)) return false;
     this.report(ids, null, eye, dir, forgiving);
+    return true;
   }
 
   /** True if any of these things is currently changed. */
@@ -532,6 +542,7 @@ export class Game {
     this.tops = [];
     this.seat = null;
     this.boardAt = null;
+    this.boardOnWall = false;
     this.watchCount = -1;
     this.setPhase('lobby');
   }
@@ -618,8 +629,30 @@ export class Game {
       realThings: byLabel,
       props: this.props.size,
       propBearingsDeg: bearings.sort((a, b) => a - b),
-      board: this.boardAt != null,
+      board: this.boardAt == null ? null : this.boardOnWall ? 'wall' : 'air',
     };
+  }
+
+  /** Scripted mode (tests, filming): the night keeps time, the spirit only plays explicit tricks. */
+  held = false;
+  private scriptSeq = 0;
+
+  /** Make one specific change now (only if it can't be seen happening). */
+  scriptTrick(kind: AnomalyPlan['kind'], targetId: string, partnerId?: string, params: Record<string, number> = {}): boolean {
+    if (!this.night) return false;
+    const plan: AnomalyPlan = {
+      id: `s${++this.scriptSeq}-${kind}`,
+      kind,
+      targetId,
+      partnerId,
+      params: { angle: 0.6, distance: 0.3, yaw: 2.2, scale: 1.4, slot: 7, ...params },
+      subtlety: 1,
+      at: this.night.elapsed,
+    };
+    if (!this.applyTrick(plan)) return false;
+    this.night.inject(plan);
+    this.emit({ type: 'trick', plan, at: this.focus.get(plan.id) ?? [] });
+    return true;
   }
 
   /** For automated tests: what is currently changed, and where to look. */

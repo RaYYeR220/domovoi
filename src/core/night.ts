@@ -125,6 +125,9 @@ export class Night {
     return this.result;
   }
 
+  /** A quiet night keeps time but plans nothing itself; only injected changes play (scripted moments). */
+  quiet = false;
+
   /** Advance the night by `dt` seconds of unpaused play. */
   tick(dt: number, room: RoomView): NightEvent[] {
     if (this._status !== 'running') return [];
@@ -136,7 +139,7 @@ export class Night {
       return events;
     }
 
-    if (this.clock >= this.nextAt) {
+    if (!this.quiet && this.clock >= this.nextAt) {
       const plan = this.planTrick(room);
       if (plan) {
         this.active.set(plan.id, { plan, appliedAt: this.clock });
@@ -180,6 +183,14 @@ export class Night {
     // A wrong accusation emboldens the spirit: the next trick comes sooner.
     this.nextAt = Math.min(this.nextAt, this.clock + this.gap() * 0.5);
     return [{ type: 'nothing', elapsed: this.clock }];
+  }
+
+  /** Put a specific, already-applied change on the books (scripted moments, tests). */
+  inject(plan: AnomalyPlan): void {
+    this.active.set(plan.id, { plan, appliedAt: this.clock });
+    this.tricks++;
+    this.recentKinds.push(plan.kind);
+    if (this.recentKinds.length > 3) this.recentKinds.shift();
   }
 
   /** End early (player quit). Counts as lost but keeps the tallies. */

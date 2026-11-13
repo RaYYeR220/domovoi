@@ -29,11 +29,11 @@ import {
   createSystem,
 } from '@iwsdk/core';
 import type { AnomalyPlan } from '../core/anomalies.js';
+import { pickBoardSpot } from '../core/board-spot.js';
 import type { V3 } from '../core/vec.js';
 import type { Game, GameEvent } from '../game/game.js';
 import { type StoredPhoto, loadPhotos, savePhoto } from '../game/photo-store.js';
 import { PROP_NAME } from '../game/props.js';
-import type { Panel } from '../game/room.js';
 import type { BoardVisual, PolaroidVisual } from '../visuals/types.js';
 import { visuals } from '../visuals/index.js';
 
@@ -191,7 +191,9 @@ export class EvidenceSystem extends createSystem({
     const room = this.game.room;
     const seat = this.game.seat;
     if (!seat) return;
-    const wall = room ? pickWall(room.panels, seat.head, seat.yaw) : null;
+    const wall = room ? pickBoardSpot(room.panels, room.furniture, seat.head, seat.yaw, { w: BOARD_W, h: BOARD_H }) : null;
+    this.game.boardOnWall = wall != null;
+    this.boardGroup.scale.setScalar(wall?.scale ?? 1);
     if (wall) {
       this.boardGroup.position.set(wall.at.x, wall.at.y, wall.at.z);
       this.boardGroup.up.set(0, 1, 0);
@@ -529,6 +531,8 @@ export class EvidenceSystem extends createSystem({
         f.group.position.lerpVectors(f.from, dest, e);
         f.group.position.y += Math.sin(Math.PI * e) * 0.12;
         f.group.quaternion.slerpQuaternions(f.fromQ, destQ, e);
+        // Arrive at the board's own size (it may be hung smaller in a tight spot).
+        f.group.scale.setScalar(1 + (this.boardGroup.scale.x - 1) * e);
         if (k >= 1) {
           f.phase = 'pinned';
           f.group.removeFromParent();
@@ -556,35 +560,3 @@ function imageToCanvas(img: HTMLImageElement): HTMLCanvasElement {
   return c;
 }
 
-/** A free stretch of wall in front of the seat, at eye height. */
-export function pickWall(panels: Panel[], head: V3, yaw: number): { at: V3; normal: V3 } | null {
-  const blockers = panels.filter((p) => p.vertical && p.label !== 'wall');
-  let best: { at: V3; normal: V3; score: number } | null = null;
-  for (const p of panels) {
-    if (!p.vertical || p.label !== 'wall') continue;
-    if (p.halfW < BOARD_W / 2 + 0.05 || p.halfH < BOARD_H / 2 + 0.05) continue;
-    for (let k = -8; k <= 8; k++) {
-      const off = k * 0.25;
-      if (Math.abs(off) > p.halfW - BOARD_W / 2 - 0.05) continue;
-      const y = Math.min(p.center.y + p.halfH - BOARD_H / 2 - 0.1, Math.max(p.center.y - p.halfH + BOARD_H / 2 + 0.3, head.y + 0.08));
-      const at = {
-        x: p.center.x + p.right.x * off,
-        y,
-        z: p.center.z + p.right.z * off,
-      };
-      const dx = at.x - head.x;
-      const dz = at.z - head.z;
-      const d = Math.hypot(dx, dz);
-      if (d < 1 || d > 4.2) continue;
-      let bearing = yaw - Math.atan2(-dx, -dz);
-      bearing = Math.atan2(Math.sin(bearing), Math.cos(bearing));
-      if (Math.abs(bearing) > 1.3) continue;
-      const clear = blockers.every((b) => Math.hypot(b.center.x - at.x, b.center.y - at.y, b.center.z - at.z) > 0.75);
-      if (!clear) continue;
-      // Slightly off-centre walls are best: visible, but not where the action is.
-      const score = Math.abs(Math.abs(bearing) - 0.5) + Math.abs(d - 2.2) * 0.3;
-      if (!best || score < best.score) best = { at: { x: at.x + p.normal.x * 0.015, y: at.y, z: at.z + p.normal.z * 0.015 }, normal: p.normal, score };
-    }
-  }
-  return best ? { at: best.at, normal: best.normal } : null;
-}

@@ -26,6 +26,14 @@ export async function run({ page, frame, workspaceRoot }) {
     await sleep(500);
   }
   await page.screenshot({ path: join(out, `${room}-front.png`) });
+  // Where the board went: look at it from the seat.
+  const boardAt = await game(() => window.__domovoi.boardAt);
+  if (boardAt) {
+    await remote('look_at', { device: 'headset', target: boardAt });
+    await sleep(700);
+    await page.screenshot({ path: join(out, `${room}-board.png`) });
+    await remote('set_transform', { device: 'headset', orientation: { x: 0, y: 0, z: 0, w: 1 } });
+  }
   // Glance around; whenever something has changed, look at it and pinch to catch it.
   const tricks = [];
   const caught = new Set();
