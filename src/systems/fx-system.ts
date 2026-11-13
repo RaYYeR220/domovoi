@@ -6,7 +6,7 @@
 
 import { Group, Quaternion, Vector3, createSystem, type Entity } from '@iwsdk/core';
 import type { AnomalyPlan } from '../core/anomalies.js';
-import type { V3 } from '../core/vec.js';
+import { type V3, yawOf } from '../core/vec.js';
 import type { Game, GameEvent, RealEffects } from '../game/game.js';
 import type { Prop } from '../game/props.js';
 import type { RealThing } from '../game/room.js';
@@ -135,9 +135,8 @@ export class FxSystem extends createSystem({}) {
   }
 
   private placeSpiritInFront(dist: number): void {
-    const seat = this.game.seat;
-    const head = seat?.head ?? this.game.head.position;
-    const yaw = seat?.yaw ?? 0;
+    const head = this.game.head.position;
+    const yaw = yawOf(this.game.head.orientation);
     // Prefer the top closest to straight ahead.
     let best: V3 | null = null;
     let bestScore = Infinity;

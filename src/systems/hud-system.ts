@@ -19,6 +19,7 @@ import {
 } from '@iwsdk/core';
 import qrcode from 'qrcode-generator';
 import type { NightRecord } from '../core/progress.js';
+import { yawOf } from '../core/vec.js';
 import { encodeShare, giftsEarned, nextGift, streak, trust } from '../core/progress.js';
 import { dateKey } from '../core/rng.js';
 import { UIButton } from '../game/components.js';
@@ -253,13 +254,22 @@ export class HudSystem extends createSystem({
   private showDawn(record: NightRecord): void {
     this.hideDawn();
     const root = new Group();
-    const seat = this.game.seat;
-    const yaw = seat?.yaw ?? 0;
-    const head = seat?.head ?? { x: 0, y: 1.2, z: 0 };
+    // In front of wherever the player is looking now, at a comfortable seated height.
+    const head = this.game.head.position;
+    const yaw = yawOf(this.game.head.orientation);
     const dir = new Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
     root.position.set(head.x + dir.x * 0.75, head.y - 0.12, head.z + dir.z * 0.75);
     root.rotation.set(-0.12, yaw, 0, 'YXZ');
     this.dawnRoot = this.world.createTransformEntity(root);
+    // It drifts after your gaze (lazily), so it is always within reach and in view.
+    this.dawnRoot.addComponent(Follower, {
+      target: this.player.head,
+      offsetPosition: [0, -0.1, -0.72],
+      behavior: FollowBehavior.FaceTarget,
+      maxAngle: 28,
+      tolerance: 0.2,
+      speed: 2.5,
+    });
     ((this.globals as Record<string, unknown>).photoHidden as import('@iwsdk/core').Object3D[] | undefined)?.push(root);
 
     const panel = new CanvasPanel(0.46, 0.3, 2200);
