@@ -117,6 +117,14 @@ export class Game {
   constructor(world: World) {
     this.world = world;
     this.save = loadSave(readStorage(SAVE_KEY));
+    const q = new URLSearchParams(location.search);
+    const flag = (k: string) => (q.has(k) ? q.get(k) !== '0' : undefined);
+    this.save.settings = {
+      eyesOnly: flag('eyes') ?? this.save.settings.eyesOnly,
+      captions: flag('captions') ?? this.save.settings.captions,
+      reducedMotion: flag('calm') ?? this.save.settings.reducedMotion,
+      highContrast: flag('contrast') ?? this.save.settings.highContrast,
+    };
     const shared = decodeShare(new URLSearchParams(location.search).get('night'));
     this.tonight = planTonight(this.save, new Date(), shared);
   }
@@ -438,6 +446,25 @@ export class Game {
     return [...ids];
   }
 
+  /** The spirit thing (or active change) closest to a gaze ray, within a cone. */
+  gazeTarget(eye: V3, dir: V3, halfAngle: number): { id: string; at: V3 } | null {
+    let best: { id: string; at: V3; a: number } | null = null;
+    const consider = (id: string, p: V3) => {
+      const a = angleTo(eye, dir, p);
+      if (a <= halfAngle && (!best || a < best.a)) best = { id, at: p, a };
+    };
+    for (const p of this.props.values()) if (!p.hidden) consider(p.id, p.center);
+    for (const r of this.room?.reals ?? []) consider(r.id, r.center);
+    if (this.night) {
+      for (const [planId, points] of this.focus) {
+        const a = this.night.active.get(planId);
+        if (a) for (const p of points) consider(a.plan.targetId, p);
+      }
+    }
+    const b = best as { id: string; at: V3 } | null;
+    return b ? { id: b.id, at: b.at } : null;
+  }
+
   /** A photo from the two-hand frame. */
   snapFrame(frame: Frame, eye: V3): void {
     const ids = this.framed((p) => frameContains(frame, eye, p, 0.015));
@@ -446,14 +473,26 @@ export class Game {
   }
 
   /** A photo along the gaze (pinch or eyes-only fallback). */
-  snapGaze(eye: V3, dir: V3, halfAngle = 7 * DEG): void {
+  snapGaze(eye: V3, dir: V3, halfAngle = 7 * DEG, forgiving = false): void {
     const ids = this.framed((p) => coneContains(eye, dir, p, halfAngle));
-    this.report(ids, null, eye, dir);
+    this.report(ids, null, eye, dir, forgiving);
   }
 
-  private report(ids: string[], frame: Frame | null, eye: V3, dir: V3): void {
+  /** True if any of these things is currently changed. */
+  private anyChanged(ids: string[]): boolean {
+    if (!this.night) return false;
+    const set = new Set(ids);
+    for (const a of this.night.active.values()) {
+      if (set.has(a.plan.targetId) || (a.plan.partnerId != null && set.has(a.plan.partnerId))) return true;
+    }
+    return false;
+  }
+
+  private report(ids: string[], frame: Frame | null, eye: V3, dir: V3, forgiving = false): void {
     let caught = false;
-    if (this.phase === 'night' && this.night && ids.length > 0) {
+    // Eyes-only dwell never counts as an accusation: looking around is free.
+    const accuse = !forgiving || this.anyChanged(ids);
+    if (this.phase === 'night' && this.night && ids.length > 0 && accuse) {
       for (const e of this.night.report(ids)) {
         if (e.type === 'caught') caught = true;
         this.onNightEvent(e);
@@ -534,6 +573,15 @@ export class Game {
       points: this.focus.get(a.plan.id) ?? [],
     }));
   }
+}
+
+function angleTo(eye: V3, dir: V3, p: V3): number {
+  const vx = p.x - eye.x;
+  const vy = p.y - eye.y;
+  const vz = p.z - eye.z;
+  const l = Math.hypot(vx, vy, vz) * Math.hypot(dir.x, dir.y, dir.z);
+  if (l < 1e-9) return 0;
+  return Math.acos(Math.min(1, Math.max(-1, (vx * dir.x + vy * dir.y + vz * dir.z) / l)));
 }
 
 function readStorage(key: string): string | null {

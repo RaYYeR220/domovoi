@@ -44,7 +44,8 @@ export interface Obb {
 }
 
 export const QUEST3_FOV: Fov = deg({ left: 55, right: 55, up: 48, down: 48 });
-export const GLASSES_FOV: Fov = deg({ left: 35, right: 35, up: 33, down: 33 });
+/** Meta VR Glasses, per-eye projection as reported by the device (asymmetric: more below than above). */
+export const GLASSES_FOV: Fov = deg({ left: 37, right: 37, up: 25, down: 43 });
 /** Meta's recommended design area for VR Glasses (58°×54°). */
 export const GLASSES_DESIGN_AREA: Fov = deg({ left: 29, right: 29, up: 27, down: 27 });
 
@@ -266,4 +267,27 @@ export class AttentionTracker {
     }
     return out;
   }
+}
+
+/**
+ * Share of a seated player's surroundings that is out of sight at any moment:
+ * directions within ±maxYaw and ±maxPitch of straight ahead, weighted by solid
+ * angle, that fall outside the field of view (plus margin).
+ */
+export function blindFraction(fov: Fov, margin = 0, maxYaw = (100 * Math.PI) / 180, maxPitch = (50 * Math.PI) / 180): number {
+  const head: Pose = { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
+  let total = 0;
+  let blind = 0;
+  const steps = 160;
+  for (let i = 0; i <= steps; i++) {
+    const yaw = -maxYaw + (2 * maxYaw * i) / steps;
+    for (let j = 0; j <= steps; j++) {
+      const pitch = -maxPitch + (2 * maxPitch * j) / steps;
+      const w = Math.cos(pitch);
+      const p = { x: Math.sin(yaw) * Math.cos(pitch), y: Math.sin(pitch), z: -Math.cos(yaw) * Math.cos(pitch) };
+      total += w;
+      if (!isInView(head, fov, p, 0, margin)) blind += w;
+    }
+  }
+  return blind / total;
 }

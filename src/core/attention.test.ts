@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   AttentionTracker,
+  blindFraction,
   GLASSES_FOV,
   QUEST3_FOV,
   fovFromProjection,
@@ -138,5 +139,16 @@ describe('AttentionTracker', () => {
     t.update(0, head(0), QUEST3_FOV, [clock]);
     t.update(1, head(80), QUEST3_FOV, [clock]); // turn left 80°
     expect(t.isVisible('clock')).toBe(true);
+  });
+});
+
+describe('blindFraction', () => {
+  it('the spirit has more room to hide on Meta VR Glasses than on Quest 3', () => {
+    const quest = blindFraction(QUEST3_FOV, 9 * DEG);
+    const glasses = blindFraction(GLASSES_FOV, 9 * DEG);
+    expect(quest).toBeGreaterThan(0.1);
+    expect(glasses).toBeGreaterThan(quest * 1.3);
+    // eslint-disable-next-line no-console
+    console.info(`blind fraction (seated ±100° × ±50°): Quest 3 ${(quest * 100).toFixed(0)}%, Meta VR Glasses ${(glasses * 100).toFixed(0)}%`);
   });
 });

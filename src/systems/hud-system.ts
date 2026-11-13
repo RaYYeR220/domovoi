@@ -63,6 +63,11 @@ export class HudSystem extends createSystem({
   private dawnPanels: CanvasPanel[] = [];
   private qr: CanvasPanel | null = null;
   private lastRecord: NightRecord | null = null;
+  private reticle!: CanvasPanel;
+  private reticleDrawn = -1;
+  private caption!: CanvasPanel;
+  private captionUntil = 0;
+  private captionSide = 0;
   private readonly tmpV = new Vector3();
   private readonly tmpQ = new Quaternion();
   private readonly basis = new Matrix4();
@@ -90,8 +95,15 @@ export class HudSystem extends createSystem({
     this.world.createTransformEntity(this.dialGroup, { parent: this.world.sceneEntity, persistent: true });
     this.dialGroup.visible = false;
 
+    this.reticle = new CanvasPanel(0.07, 0.07, 3000);
+    this.reticle.opacity = 0;
+    this.world.createTransformEntity(this.reticle.mesh, { parent: this.world.sceneEntity, persistent: true });
+    this.caption = new CanvasPanel(0.2, 0.045, 2400);
+    this.caption.opacity = 0;
+    this.world.createTransformEntity(this.caption.mesh, { parent: this.world.sceneEntity, persistent: true });
+
     const hidden = ((this.globals as Record<string, unknown>).photoHidden ??= []) as import('@iwsdk/core').Object3D[];
-    hidden.push(this.hint.mesh, this.dialGroup);
+    hidden.push(this.hint.mesh, this.dialGroup, this.reticle.mesh, this.caption.mesh);
     this.cleanupFuncs.push(this.game.on((e) => this.onGame(e)));
     this.queries.pressed.subscribe('qualify', (entity) => {
       this.onButton(entity.getValue(UIButton, 'action') as string);
@@ -108,6 +120,7 @@ export class HudSystem extends createSystem({
         break;
       case 'trick':
         if (!introduced && this.hintKind === 'look-away') this.showHint('frame-it', 999);
+        if (this.game.save.settings.captions && e.at[0]) this.showCaption(e.plan.kind, e.at[0]);
         break;
       case 'caught':
         this.showHint('caught', 2.6);
@@ -166,7 +179,92 @@ export class HudSystem extends createSystem({
     });
   }
 
+  /** Sound made visible: a small caption at the edge of view, pointing to where it came from. */
+  private showCaption(kind: string, at: { x: number; y: number; z: number }): void {
+    const head = this.game.head;
+    const yaw = yawOf(head.orientation);
+    const dx = at.x - head.position.x;
+    const dz = at.z - head.position.z;
+    let rel = yaw - Math.atan2(-dx, -dz);
+    rel = Math.atan2(Math.sin(rel), Math.cos(rel)); // + = to your right
+    this.captionSide = Math.abs(rel) < 0.35 ? 0 : Math.sign(rel);
+    const word =
+      kind === 'lamp-on' ? 'a click' : kind === 'state' ? 'a shimmer' : kind === 'appear' || kind === 'shelf-guest' ? 'a clink' : kind === 'screen-static' ? 'a hiss' : 'a creak';
+    const where = Math.abs(rel) > 2.2 ? 'behind you' : this.captionSide < 0 ? 'to your left' : this.captionSide > 0 ? 'to your right' : 'ahead';
+    this.caption.draw((ctx, w, h) => {
+      const text = `${word}, ${where}`;
+      ctx.font = `500 ${h * 0.42}px ${TEXT}`;
+      const tw = ctx.measureText(text).width;
+      const arrow = h * 0.5;
+      const cw = tw + arrow + h * 0.9;
+      const x0 = this.captionSide < 0 ? 0 : this.captionSide > 0 ? w - cw : (w - cw) / 2;
+      ctx.save();
+      ctx.translate(x0, 0);
+      card(ctx, cw, h, 0.5);
+      ctx.fillStyle = PAPER;
+      ctx.textBaseline = 'middle';
+      const left = this.captionSide < 0;
+      // Arrow toward the sound.
+      ctx.beginPath();
+      const ax = left ? h * 0.35 : cw - h * 0.35;
+      const dir = left ? -1 : 1;
+      ctx.moveTo(ax + dir * arrow * 0.35, h / 2);
+      ctx.lineTo(ax - dir * arrow * 0.25, h * 0.28);
+      ctx.lineTo(ax - dir * arrow * 0.25, h * 0.72);
+      ctx.closePath();
+      if (this.captionSide !== 0) ctx.fill();
+      ctx.fillText(text, left ? h * 0.35 + arrow : h * 0.45, h / 2 + 1);
+      ctx.restore();
+    });
+    this.captionUntil = this.game.time + 2.6;
+  }
+
+  private placeHeadLocked(panel: CanvasPanel, x: number, y: number, z: number): void {
+    const o = this.game.head.orientation;
+    const p = this.game.head.position;
+    this.tmpQ.set(o.x, o.y, o.z, o.w);
+    this.tmpV.set(x, y, z).applyQuaternion(this.tmpQ);
+    panel.mesh.position.set(p.x + this.tmpV.x, p.y + this.tmpV.y, p.z + this.tmpV.z);
+    panel.mesh.quaternion.copy(this.tmpQ);
+  }
+
   update(dt: number): void {
+    // Caption near the edge of view (inside the Glasses design area).
+    const cap = this.game.time < this.captionUntil && !this.game.paused ? 1 : 0;
+    this.caption.opacity += (cap - this.caption.opacity) * Math.min(1, dt * 8);
+    if (this.caption.opacity > 0.01) this.placeHeadLocked(this.caption, this.captionSide * 0.13, -0.075, -0.6);
+
+    // Eyes-only dwell ring on whatever you are looking at.
+    const dwell = this.globals.dwell as { targetId: string | null; progress: number; at: { x: number; y: number; z: number } | null } | undefined;
+    const showRing = dwell?.targetId && dwell.at ? 1 : 0;
+    this.reticle.opacity += (showRing - this.reticle.opacity) * Math.min(1, dt * 10);
+    if (dwell?.at && showRing) {
+      this.reticle.mesh.position.set(dwell.at.x, dwell.at.y, dwell.at.z);
+      const hp = this.game.head.position;
+      this.reticle.mesh.lookAt(hp.x, hp.y, hp.z);
+      const step = Math.round(dwell.progress * 30);
+      if (step !== this.reticleDrawn) {
+        this.reticleDrawn = step;
+        this.reticle.draw((ctx, w) => {
+          const c = w / 2;
+          ctx.lineCap = 'round';
+          ctx.lineWidth = w * 0.06;
+          ctx.strokeStyle = 'rgba(23, 18, 13, 0.55)';
+          ctx.beginPath();
+          ctx.arc(c, c, c * 0.72, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.lineWidth = w * 0.035;
+          ctx.strokeStyle = 'rgba(243, 236, 224, 0.5)';
+          ctx.stroke();
+          ctx.strokeStyle = AMBER;
+          ctx.lineWidth = w * 0.05;
+          ctx.beginPath();
+          ctx.arc(c, c, c * 0.72, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * dwell.progress);
+          ctx.stroke();
+        });
+      }
+    }
+
     // Hint card fade.
     const want = this.hintKind !== 'none' && this.game.time < this.hintUntil && !this.game.paused ? 1 : 0;
     this.hintFade += (want - this.hintFade) * Math.min(1, dt * 6);
