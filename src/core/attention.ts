@@ -15,7 +15,6 @@
 import {
   type Quat,
   type V3,
-  conjugate,
   dot,
   lengthSq,
   rotate,
@@ -96,16 +95,20 @@ export interface HeadSpaceAngles {
 const scratchA = v3();
 const scratchB = v3();
 
-/** Where a world point sits relative to the head's view direction. */
+const anglesOut: HeadSpaceAngles = { yaw: 0, pitch: 0, distance: 0 };
+
+/**
+ * Where a world point sits relative to the head's view direction.
+ * Returns a shared object (read it immediately; it is reused on the next call).
+ */
 export function headSpaceAngles(head: Pose, point: V3): HeadSpaceAngles {
   const rel = sub(point, head.position, scratchA);
-  const local = rotate(conjugate(head.orientation), rel, scratchB);
+  const local = rotateInv(head.orientation, rel, scratchB);
   const horizontal = Math.sqrt(local.x * local.x + local.z * local.z);
-  return {
-    yaw: Math.atan2(local.x, -local.z),
-    pitch: Math.atan2(local.y, horizontal),
-    distance: Math.sqrt(lengthSq(local)),
-  };
+  anglesOut.yaw = Math.atan2(local.x, -local.z);
+  anglesOut.pitch = Math.atan2(local.y, horizontal);
+  anglesOut.distance = Math.sqrt(lengthSq(local));
+  return anglesOut;
 }
 
 /**
@@ -140,37 +143,66 @@ export function angleFromGaze(head: Pose, point: V3): number {
   return Math.acos(Math.min(1, Math.max(-1, dot(rel, forward) / l)));
 }
 
+/** Rotates `v` by the inverse of unit quaternion `q` (no allocation). */
+function rotateInv(q: Quat, v: V3, out: V3): V3 {
+  const qx = -q.x;
+  const qy = -q.y;
+  const qz = -q.z;
+  const tx = 2 * (qy * v.z - qz * v.y);
+  const ty = 2 * (qz * v.x - qx * v.z);
+  const tz = 2 * (qx * v.y - qy * v.x);
+  const x = v.x + q.w * tx + (qy * tz - qz * ty);
+  const y = v.y + q.w * ty + (qz * tx - qx * tz);
+  const z = v.z + q.w * tz + (qx * ty - qy * tx);
+  out.x = x;
+  out.y = y;
+  out.z = z;
+  return out;
+}
+
+const sA = v3();
+const sB = v3();
+const sD = v3();
+const sP = v3();
+
+function axisSlab(la: number, d: number, h: number, range: { tMin: number; tMax: number }): boolean {
+  if (Math.abs(d) < 1e-9) return la >= -h && la <= h;
+  let t1 = (-h - la) / d;
+  let t2 = (h - la) / d;
+  if (t1 > t2) {
+    const t = t1;
+    t1 = t2;
+    t2 = t;
+  }
+  if (t1 > range.tMin) range.tMin = t1;
+  if (t2 < range.tMax) range.tMax = t2;
+  return range.tMin <= range.tMax;
+}
+
+const slabRange = { tMin: 0, tMax: 1 };
+
 /**
  * Segment–oriented-box intersection (slab test in the box's frame).
  * `shrink` pulls each face in by that many metres so that things resting on a
  * surface are not considered hidden by the surface they rest on.
+ * Allocation-free: it runs for every watched thing × every occluder each frame.
  */
 export function segmentHitsObb(a: V3, b: V3, box: Obb, shrink = 0): boolean {
-  const inv = conjugate(box.orientation);
-  const la = rotate(inv, sub(a, box.center, v3()));
-  const lb = rotate(inv, sub(b, box.center, v3()));
-  const dir = sub(lb, la, v3());
-  let tMin = 0;
-  let tMax = 1;
-  const axes: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z'];
-  for (const k of axes) {
-    const h = Math.max(0, box.halfExtents[k] - shrink);
-    if (Math.abs(dir[k]) < 1e-9) {
-      if (la[k] < -h || la[k] > h) return false;
-      continue;
-    }
-    let t1 = (-h - la[k]) / dir[k];
-    let t2 = (h - la[k]) / dir[k];
-    if (t1 > t2) [t1, t2] = [t2, t1];
-    tMin = Math.max(tMin, t1);
-    tMax = Math.min(tMax, t2);
-    if (tMin > tMax) return false;
-  }
-  return true;
+  const la = rotateInv(box.orientation, sub(a, box.center, sP), sA);
+  const lb = rotateInv(box.orientation, sub(b, box.center, sP), sB);
+  const d = sub(lb, la, sD);
+  slabRange.tMin = 0;
+  slabRange.tMax = 1;
+  const h = box.halfExtents;
+  return (
+    axisSlab(la.x, d.x, Math.max(0, h.x - shrink), slabRange) &&
+    axisSlab(la.y, d.y, Math.max(0, h.y - shrink), slabRange) &&
+    axisSlab(la.z, d.z, Math.max(0, h.z - shrink), slabRange)
+  );
 }
 
 export function pointInObb(p: V3, box: Obb, pad = 0): boolean {
-  const l = rotate(conjugate(box.orientation), sub(p, box.center, v3()));
+  const l = rotateInv(box.orientation, sub(p, box.center, sP), sA);
   return (
     Math.abs(l.x) <= box.halfExtents.x + pad &&
     Math.abs(l.y) <= box.halfExtents.y + pad &&

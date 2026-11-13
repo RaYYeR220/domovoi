@@ -12,6 +12,7 @@
 import {
   CanvasTexture,
   Color,
+  Matrix4,
   type Entity,
   Group,
   Mesh,
@@ -37,6 +38,14 @@ import type { BoardVisual, PolaroidVisual } from '../visuals/types.js';
 import { visuals } from '../visuals/index.js';
 
 const PHOTO_LAYER = 3;
+
+/** Linear 8-bit to sRGB 8-bit (plain render targets are written in linear light). */
+const SRGB_LUT = new Uint8Array(256);
+for (let i = 0; i < 256; i++) {
+  const c = i / 255;
+  const v = c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+  SRGB_LUT[i] = Math.round(Math.min(1, Math.max(0, v)) * 255);
+}
 const PHOTO_SIZE = 384;
 const BOARD_W = 0.8;
 const BOARD_H = 0.56;
@@ -69,6 +78,7 @@ const ghostMaterial = new ShaderMaterial({
 interface Flying {
   visual: PolaroidVisual;
   group: Group;
+  entity?: Entity;
   born: number;
   caught: boolean;
   slot: number;
@@ -97,28 +107,47 @@ export class EvidenceSystem extends createSystem({
   private readonly tmpQ = new Quaternion();
   private readonly clearColor = new Color();
   private caughtTonight = 0;
+  private readonly ghosts = new Map<Mesh, Mesh>();
+  private readonly desired = new Matrix4();
+  private readonly inv = new Matrix4();
+  private attachedAt = -1;
+  private boardFixed = false;
+  private readonly flyDest = new Vector3();
+  private readonly flyQ = new Quaternion();
   private lastCaught: AnomalyPlan[] = [];
 
   init(): void {
     this.game = this.globals.game as Game;
     (this.globals as Record<string, unknown>).photoHidden ??= [] as Object3D[];
-    this.rt.texture.colorSpace = SRGBColorSpace;
     this.canvas.width = PHOTO_SIZE;
     this.canvas.height = PHOTO_SIZE;
     this.cam.layers.set(0);
     this.cam.layers.enable(PHOTO_LAYER);
 
+    // The room as the photo sees it. Scene-understanding meshes are invisible, so
+    // their "ghosts" live as separate photo-only objects, re-synced before each shot.
     const ghostify = (e: Entity) => {
       const obj = e.object3D;
-      if (!(obj instanceof Mesh) || obj.userData.ghost) return;
+      if (!(obj instanceof Mesh) || this.ghosts.has(obj)) return;
       const ghost = new Mesh(obj.geometry, ghostMaterial);
       ghost.layers.set(PHOTO_LAYER);
-      ghost.userData.ghost = true;
-      obj.userData.ghost = ghost;
-      obj.add(ghost);
+      ghost.matrixAutoUpdate = false;
+      ghost.frustumCulled = false;
+      this.scene.add(ghost);
+      this.ghosts.set(obj, ghost);
+    };
+    const unghost = (e: Entity) => {
+      const obj = e.object3D;
+      const ghost = obj ? this.ghosts.get(obj as Mesh) : undefined;
+      if (ghost) {
+        ghost.removeFromParent();
+        this.ghosts.delete(obj as Mesh);
+      }
     };
     this.queries.meshes.subscribe('qualify', ghostify);
     this.queries.planes.subscribe('qualify', ghostify);
+    this.queries.meshes.subscribe('disqualify', unghost);
+    this.queries.planes.subscribe('disqualify', unghost);
     this.cleanupFuncs.push(this.game.on((e) => this.onGame(e)));
     try {
       this.anchorAtStart = localStorage.getItem(ANCHOR_KEY);
@@ -175,6 +204,8 @@ export class EvidenceSystem extends createSystem({
     }
     this.board = visuals.createBoard(BOARD_W, BOARD_H);
     this.boardGroup.add(this.board.object);
+    this.boardGroup.updateMatrixWorld(true);
+    this.desired.copy(this.boardGroup.matrixWorld);
     this.boardEntity = this.world.createTransformEntity(this.boardGroup);
     this.boardEntity.addComponent(XRAnchor);
     const bp = this.boardGroup.position;
@@ -187,35 +218,63 @@ export class EvidenceSystem extends createSystem({
     });
   }
 
-  /** Same anchor as yesterday → put the board exactly where it was; otherwise remember this spot. */
+  /**
+   * Same anchor as yesterday: put the board exactly where it was. Otherwise keep
+   * it where it was hung today, expressed relative to the anchor, and remember it.
+   */
   private persistBoard(): void {
     if (!this.boardEntity || this.boardRestored) return;
     if (!this.boardEntity.getValue(XRAnchor, 'attached')) return;
-    if (this.sessionClock < 3) return;
-    this.boardRestored = true;
+    if (this.attachedAt < 0) {
+      this.attachedAt = this.sessionClock;
+      return;
+    }
+    // Give the anchor a moment to take its pose, then wait for its id (a new
+    // anchor only gets one once it has been made persistent).
+    if (this.sessionClock - this.attachedAt < 0.3) return;
     let now: string | null = null;
     let saved: { uuid: string; p: number[]; q: number[] } | null = null;
     try {
       now = localStorage.getItem(ANCHOR_KEY);
       saved = JSON.parse(localStorage.getItem(BOARD_KEY) ?? 'null');
     } catch {
+      this.boardRestored = true;
       return;
     }
     const obj = this.boardGroup;
-    if (saved && now && saved.uuid === now && now === this.anchorAtStart) {
+    const restoredAnchor = now != null && now === this.anchorAtStart;
+    if (saved && restoredAnchor && saved.uuid === now) {
       obj.position.fromArray(saved.p);
       obj.quaternion.fromArray(saved.q);
-      console.info('[domovoi] evidence board restored to yesterday’s spot');
-    } else if (now) {
-      try {
-        localStorage.setItem(
-          BOARD_KEY,
-          JSON.stringify({ uuid: now, p: obj.position.toArray(), q: obj.quaternion.toArray() }),
-        );
-      } catch {
-        // ignore
+      this.boardRestored = true;
+      console.info('[domovoi] evidence board restored to its spot from last time');
+    } else {
+      if (!this.boardFixed) {
+        // attach() keeps the world pose from before the anchor pose arrived:
+        // re-express today's spot relative to the anchor as it is now.
+        const parent = obj.parent;
+        if (parent) {
+          parent.updateWorldMatrix(true, false);
+          this.inv.copy(parent.matrixWorld).invert();
+          this.inv.multiply(this.desired).decompose(obj.position, obj.quaternion, obj.scale);
+        }
+        this.boardFixed = true;
       }
+      if (now == null) {
+        // No persistent id yet; give up quietly after a while (no persistence here).
+        if (this.sessionClock - this.attachedAt > 15) this.boardRestored = true;
+        return;
+      }
+      try {
+        localStorage.setItem(BOARD_KEY, JSON.stringify({ uuid: now, p: obj.position.toArray(), q: obj.quaternion.toArray() }));
+      } catch {
+        // Storage blocked: the board just won't remember its spot.
+      }
+      this.boardRestored = true;
     }
+    obj.updateWorldMatrix(true, false);
+    const wp = obj.getWorldPosition(this.tmp);
+    this.game.boardAt = { x: wp.x, y: wp.y, z: wp.z };
   }
 
   private nextSlot(): number {
@@ -265,6 +324,7 @@ export class EvidenceSystem extends createSystem({
   }
 
   private removePolaroid(f: Flying): void {
+    if (f.entity && f.phase !== 'pinned') f.entity.dispose();
     f.group.removeFromParent();
     f.visual.dispose();
     const i = this.polaroids.indexOf(f);
@@ -295,10 +355,11 @@ export class EvidenceSystem extends createSystem({
     at.y -= 0.09;
     group.position.copy(at);
     group.lookAt(eye.x, eye.y, eye.z);
-    this.world.createTransformEntity(group);
+    const entity = this.world.createTransformEntity(group);
     const f: Flying = {
       visual,
       group,
+      entity,
       born: this.game.time,
       caught,
       slot: caught ? this.nextSlot() : -1,
@@ -370,8 +431,18 @@ export class EvidenceSystem extends createSystem({
     return 'something';
   }
 
+  private syncGhosts(): void {
+    for (const [src, ghost] of this.ghosts) {
+      src.updateWorldMatrix(true, false);
+      ghost.matrix.copy(src.matrixWorld);
+      ghost.matrixWorld.copy(src.matrixWorld);
+      if (ghost.geometry !== src.geometry) ghost.geometry = src.geometry;
+    }
+  }
+
   private renderPhoto(eye: V3, target: V3, frame: { width: number; height: number; center: V3 } | null): HTMLCanvasElement {
     const renderer = this.renderer;
+    this.syncGhosts();
     const dist = Math.hypot(target.x - eye.x, target.y - eye.y, target.z - eye.z);
     const extent = frame ? Math.max(frame.width, frame.height) : dist * 0.42;
     const fov = (2 * Math.atan(extent / 2 / Math.max(0.05, frame ? dist : dist))) * (180 / Math.PI);
@@ -403,12 +474,21 @@ export class EvidenceSystem extends createSystem({
     hidden.forEach((o, i) => (o.visible = was[i]));
     for (const f of this.polaroids) f.group.visible = true;
 
-    // Pixels come bottom-up.
+    // Pixels come bottom-up and in linear light; flip and encode to sRGB.
     const ctx = this.canvas.getContext('2d')!;
     const img = ctx.createImageData(PHOTO_SIZE, PHOTO_SIZE);
     const row = PHOTO_SIZE * 4;
+    const px = this.pixels;
+    const lut = SRGB_LUT;
     for (let y = 0; y < PHOTO_SIZE; y++) {
-      img.data.set(this.pixels.subarray((PHOTO_SIZE - 1 - y) * row, (PHOTO_SIZE - y) * row), y * row);
+      const src = (PHOTO_SIZE - 1 - y) * row;
+      const dst = y * row;
+      for (let i = 0; i < row; i += 4) {
+        img.data[dst + i] = lut[px[src + i]];
+        img.data[dst + i + 1] = lut[px[src + i + 1]];
+        img.data[dst + i + 2] = lut[px[src + i + 2]];
+        img.data[dst + i + 3] = 255;
+      }
     }
     const out = document.createElement('canvas');
     out.width = PHOTO_SIZE;
@@ -422,7 +502,8 @@ export class EvidenceSystem extends createSystem({
     this.persistBoard();
     this.board?.update(dt, t);
     const now = this.game.time;
-    for (const f of [...this.polaroids]) {
+    for (let i = this.polaroids.length - 1; i >= 0; i--) {
+      const f = this.polaroids[i];
       f.visual.update(dt, t);
       const age = now - f.born;
       if (f.phase === 'develop') {
@@ -443,8 +524,8 @@ export class EvidenceSystem extends createSystem({
         const k = Math.min(1, (now - f.born) / 1.1);
         const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
         const s = this.board!.slotTransform(f.slot, BOARD_SLOTS);
-        const dest = new Vector3(s.x, s.y, 0.002).applyMatrix4(this.boardGroup.matrixWorld);
-        const destQ = this.boardGroup.getWorldQuaternion(new Quaternion());
+        const dest = this.flyDest.set(s.x, s.y, 0.002).applyMatrix4(this.boardGroup.matrixWorld);
+        const destQ = this.boardGroup.getWorldQuaternion(this.flyQ);
         f.group.position.lerpVectors(f.from, dest, e);
         f.group.position.y += Math.sin(Math.PI * e) * 0.12;
         f.group.quaternion.slerpQuaternions(f.fromQ, destQ, e);

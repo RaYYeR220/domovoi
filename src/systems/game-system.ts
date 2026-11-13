@@ -50,6 +50,7 @@ export class GameSystem extends createSystem({
     new URLSearchParams(location.search).get('fov') === 'glasses' ? GLASSES_FOV : null;
   /** Where the player is looking: eye gaze when the device has it, otherwise the head. */
   readonly gaze = { origin: { x: 0, y: 0, z: 0 } as V3, dir: { x: 0, y: 0, z: -1 } as V3, eyes: false };
+  private frameDt = 1 / 72;
   private dwellId: string | null = null;
   private dwellTime = 0;
 
@@ -71,6 +72,11 @@ export class GameSystem extends createSystem({
       this.world.visibilityState.subscribe((s) => {
         const away = s === VisibilityState.Hidden || s === VisibilityState.VisibleBlurred;
         this.game.setPaused(away);
+        // Leaving the immersive session returns to the start page with a clean slate
+        // (progress and photos are saved; the room is re-read on the next visit).
+        if (s === VisibilityState.NonImmersive && this.game.phase !== 'lobby' && !import.meta.env.DEV) {
+          location.reload();
+        }
         if (s === VisibilityState.Visible) {
           this.world.session?.updateTargetFrameRate?.(72).catch(() => {});
         }
@@ -109,6 +115,7 @@ export class GameSystem extends createSystem({
     if (game.phase === 'scanning') this.tryFurnish(head);
 
     game.update(dt, head, this.fov);
+    this.frameDt = dt;
     this.updateHands(head.position);
   }
 
@@ -138,8 +145,14 @@ export class GameSystem extends createSystem({
 
   private updateGaze(frame: XRFrame | undefined, ref: XRReferenceSpace | null, eye: V3): void {
     this.fwd.set(0, 0, -1).applyQuaternion(this.headQuat);
-    this.gaze.origin = eye;
-    this.gaze.dir = { x: this.fwd.x, y: this.fwd.y, z: this.fwd.z };
+    const o = this.gaze.origin;
+    const d = this.gaze.dir;
+    o.x = eye.x;
+    o.y = eye.y;
+    o.z = eye.z;
+    d.x = this.fwd.x;
+    d.y = this.fwd.y;
+    d.z = this.fwd.z;
     this.gaze.eyes = false;
     if (!frame || !ref) return;
     for (const source of frame.session.inputSources) {
@@ -147,8 +160,12 @@ export class GameSystem extends createSystem({
       const pose = frame.getPose(source.targetRaySpace, ref);
       if (!pose) continue;
       const m = pose.transform.matrix;
-      this.gaze.origin = { x: m[12], y: m[13], z: m[14] };
-      this.gaze.dir = { x: -m[8], y: -m[9], z: -m[10] };
+      o.x = m[12];
+      o.y = m[13];
+      o.z = m[14];
+      d.x = -m[8];
+      d.y = -m[9];
+      d.z = -m[10];
       this.gaze.eyes = true;
       return;
     }
@@ -184,7 +201,7 @@ export class GameSystem extends createSystem({
     const ref = this.renderer.xr.getReferenceSpace();
     this.hands.update(frame, ref);
     this.updateGaze(frame, ref, eye);
-    this.updateDwell(1 / 72);
+    this.updateDwell(this.frameDt);
     const game = this.game;
     const L = this.hands.left.tracked ? detectL(this.hands.left.joints) : null;
     const R = this.hands.right.tracked ? detectL(this.hands.right.joints) : null;
@@ -201,7 +218,7 @@ export class GameSystem extends createSystem({
     eye = this.gaze.origin;
     const pinch = fr ? 0 : Math.max(this.hands.left.pinch, this.hands.right.pinch);
     if (pinch > 0.9) {
-      this.pinchHeld += 1 / 72;
+      this.pinchHeld += this.frameDt;
       if (!this.pinchFired && this.pinchHeld > 0.22 && canShoot) {
         this.pinchFired = true;
         game.snapGaze(eye, dir);

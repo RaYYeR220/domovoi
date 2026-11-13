@@ -71,6 +71,10 @@ export class HudSystem extends createSystem({
   private readonly tmpV = new Vector3();
   private readonly tmpQ = new Quaternion();
   private readonly basis = new Matrix4();
+  private readonly dFwd = new Vector3();
+  private readonly dSide = new Vector3();
+  private readonly dBack = new Vector3();
+  private readonly dM = new Vector3();
 
   init(): void {
     this.game = this.globals.game as Game;
@@ -287,11 +291,11 @@ export class HudSystem extends createSystem({
     const idx = j['index-finger-metacarpal'];
     const pinky = j['pinky-finger-metacarpal'];
     // Hand frame: forward along the hand, side across the knuckles, normal out of the back of the hand.
-    const fwd = new Vector3(mid.x - wrist.x, mid.y - wrist.y, mid.z - wrist.z).normalize();
-    const side = new Vector3(idx.x - pinky.x, idx.y - pinky.y, idx.z - pinky.z).normalize();
-    const back = new Vector3().crossVectors(side, fwd).normalize(); // left hand: back of hand
+    const fwd = this.dFwd.set(mid.x - wrist.x, mid.y - wrist.y, mid.z - wrist.z).normalize();
+    const side = this.dSide.set(idx.x - pinky.x, idx.y - pinky.y, idx.z - pinky.z).normalize();
+    const back = this.dBack.crossVectors(side, fwd).normalize(); // left hand: back of hand
     this.dialGroup.position.set(wrist.x, wrist.y, wrist.z).addScaledVector(fwd, -0.035).addScaledVector(back, 0.03);
-    const m = new Vector3().crossVectors(fwd, back);
+    const m = this.dM.crossVectors(fwd, back);
     const basis = this.basis;
     basis.makeBasis(m.normalize(), fwd, back);
     this.tmpQ.setFromRotationMatrix(basis);
@@ -414,9 +418,11 @@ export class HudSystem extends createSystem({
 
       ctx.fillStyle = PAPER;
       ctx.font = `italic 400 ${h * 0.055}px ${DISPLAY}`;
-      const newest = gifts[gifts.length - 1];
-      const line = newest && record.kind === 'official'
-        ? newest.note
+      // A gift note only on the dawn it was earned.
+      const before = t - (record.kind === 'official' ? (record.status === 'won' ? 2 + record.stars : 1) : 0);
+      const fresh = gifts.find((g) => g.at > before && g.at <= t);
+      const line = fresh && record.kind === 'official'
+        ? fresh.note
         : next
           ? `It is starting to trust you (${t}/${next.at}).`
           : 'It trusts you completely.';
@@ -456,6 +462,9 @@ export class HudSystem extends createSystem({
 
   private hideDawn(): void {
     if (this.dawnRoot) {
+      const hidden = (this.globals as Record<string, unknown>).photoHidden as import('@iwsdk/core').Object3D[] | undefined;
+      const i = hidden?.indexOf(this.dawnRoot.object3D!) ?? -1;
+      if (hidden && i >= 0) hidden.splice(i, 1);
       this.dawnRoot.dispose();
       this.dawnRoot = null;
     }
@@ -487,11 +496,12 @@ export class HudSystem extends createSystem({
     const panel = new CanvasPanel(0.2, 0.24, 2200);
     panel.draw((ctx, w, h) => {
       card(ctx, w, h, 0.08);
-      const size = w * 0.72;
+      const size = w * 0.66;
       const x0 = (w - size) / 2;
-      const y0 = w * 0.12;
+      const y0 = w * 0.15;
+      const quiet = (size / n) * 4; // a 4-module quiet zone so phone cameras lock on
       ctx.fillStyle = PAPER;
-      roundRect(ctx, x0 - 10, y0 - 10, size + 20, size + 20, 14);
+      roundRect(ctx, x0 - quiet, y0 - quiet, size + quiet * 2, size + quiet * 2, 14);
       ctx.fill();
       ctx.fillStyle = '#17120d';
       const cell = size / n;

@@ -255,8 +255,8 @@ export type ShutterState =
   | { phase: 'snap'; frame: Frame };
 
 /**
- * Fires once the frame has been held still for `dwell` seconds, then waits for
- * a short cooldown so one long hold doesn't take a burst of photos.
+ * Fires once the frame has been held still for `dwell` seconds. One hold takes
+ * one photo: the hands have to drop (or the frame break) before the next.
  */
 export class Shutter {
   private since = -1;
@@ -270,12 +270,16 @@ export class Shutter {
     private readonly maxDrift = 0.03,
   ) {}
 
+  /** After a photo, the hands must drop (or the frame break) before the next one. */
+  private armed = true;
+
   update(now: number, frame: Frame | null): ShutterState {
     if (!frame) {
       this.since = -1;
+      if (now - this.lastSnap >= 0.15) this.armed = true;
       return { phase: 'idle' };
     }
-    if (now - this.lastSnap < this.cooldown) return { phase: 'idle' };
+    if (!this.armed || now - this.lastSnap < this.cooldown) return { phase: 'idle' };
     const size = frame.width + frame.height;
     const moved =
       this.since < 0 ||
@@ -291,6 +295,7 @@ export class Shutter {
     if (progress >= 1) {
       this.lastSnap = now;
       this.since = -1;
+      this.armed = false;
       return { phase: 'snap', frame };
     }
     return { phase: 'aiming', progress };

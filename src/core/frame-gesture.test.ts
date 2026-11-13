@@ -120,6 +120,17 @@ describe('Shutter', () => {
     expect(s.update(0.6, frame).phase).toBe('idle'); // cooldown
   });
 
+  it('one hold takes one photo; dropping the hands re-arms it', () => {
+    const s = new Shutter(0.5, 1.0);
+    let snaps = 0;
+    for (let t = 0; t < 5; t += 0.05) if (s.update(t, frame).phase === 'snap') snaps++;
+    expect(snaps).toBe(1);
+    s.update(5.1, null);
+    let again = 0;
+    for (let t = 5.2; t < 6; t += 0.05) if (s.update(t, frame).phase === 'snap') again++;
+    expect(again).toBe(1);
+  });
+
   it('does not fire while the frame keeps moving', () => {
     const s = new Shutter(0.5, 1.0);
     for (let t = 0; t < 2; t += 0.1) {

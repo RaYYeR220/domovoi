@@ -136,6 +136,24 @@ describe('Night', () => {
     expect(late).toBeLessThan(early);
   });
 
+  it('rarely repeats the same trick twice in a row', () => {
+    const night = new Night({ seed: 12, nightIndex: 3, loseAt: 999 });
+    const room = fakeRoom();
+    const kinds: string[] = [];
+    for (let t = 0; t < 420; t += 0.25) {
+      for (const e of night.tick(0.25, room)) {
+        if (e.type === 'trick') {
+          kinds.push(e.plan.kind);
+          night.report([e.plan.targetId]);
+        }
+      }
+    }
+    const repeats = kinds.slice(1).filter((k, i) => k === kinds[i]).length;
+    expect(kinds.length).toBeGreaterThan(10);
+    expect(new Set(kinds).size).toBeGreaterThanOrEqual(5);
+    expect(repeats / kinds.length).toBeLessThan(0.2);
+  });
+
   it('skips a trick the room cannot host and tries another', () => {
     const room = fakeRoom({ refuse: (p) => p.kind === 'shift' });
     const tricks = tricksOf(run(new Night({ seed: 4, nightIndex: 1, loseAt: 99 }), room, 300));

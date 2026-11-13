@@ -112,6 +112,9 @@ export class Game {
   private arrivalQueue: Placement[] = [];
   private arrivalTimer = 0;
   firstCatchDone = false;
+  private nightNo = 0;
+  /** Caught changes are put right only after their photo is taken. */
+  private pendingUndo: AnomalyPlan[] = [];
   firstTrickDone = false;
 
   constructor(world: World) {
@@ -216,7 +219,9 @@ export class Game {
     const first = !this.save.introduced;
     const lengthParam = Number(new URLSearchParams(location.search).get('length'));
     const duration = Number.isFinite(lengthParam) && lengthParam >= 30 && lengthParam <= 900 ? lengthParam : undefined;
+    this.nightNo++;
     this.night = new Night({
+      idPrefix: `n${this.nightNo}-`,
       seed: this.tonight.seed,
       nightIndex: this.tonight.index,
       ...(duration ? { duration, gapStart: Math.min(26, duration / 8), gapEnd: Math.min(11, duration / 16) } : {}),
@@ -231,13 +236,26 @@ export class Game {
     return false;
   }
 
+  private readonly watchList: Array<{ id: string; position: V3; radius: number }> = [];
+  private watchCount = -1;
+
+  /** Everything the attention tracker watches. Rebuilt only when the set changes. */
   private watchables() {
-    const out: Array<{ id: string; position: V3; radius: number }> = [];
-    for (const p of this.props.values()) out.push({ id: p.id, position: p.center, radius: p.radius });
-    for (const r of this.room?.reals ?? []) {
-      out.push({ id: r.id, position: r.center, radius: Math.max(r.size.x, r.size.y, r.size.z) * 0.35 });
+    const synthetic = this.syntheticTops;
+    const count = this.props.size + (this.room?.reals.length ?? 0) + synthetic.length;
+    if (count !== this.watchCount) {
+      this.watchCount = count;
+      this.watchList.length = 0;
+      for (const p of this.props.values()) this.watchList.push({ id: p.id, position: p.center, radius: p.radius });
+      for (const r of this.room?.reals ?? []) {
+        this.watchList.push({ id: r.id, position: r.center, radius: Math.max(r.size.x, r.size.y, r.size.z) * 0.35 });
+      }
+      for (const t of synthetic) this.watchList.push({ id: t.id, position: t.center, radius: 0.22 });
+    } else {
+      let i = 0;
+      for (const p of this.props.values()) this.watchList[i++].position = p.center;
     }
-    return out;
+    return this.watchList;
   }
 
   // --- The room as the night sees it ----------------------------------------
@@ -259,16 +277,12 @@ export class Game {
       }
       for (const t of this.syntheticTops) {
         // The spirit's own shelves can receive guests too.
-        out.push({ id: t.id, source: 'real', label: 'shelf', unseenFor: this.unseenPoint(t.center) });
+        out.push({ id: t.id, source: 'real', label: 'shelf', unseenFor: this.attention.unseenFor(t.id, this.clock) });
       }
       return out;
     },
     apply: (plan) => this.applyTrick(plan),
   };
-
-  private unseenPoint(p: V3): number {
-    return isInView(this.head, this.fov, p, 0.1, 9 * DEG) ? 0 : 10;
-  }
 
   private visibleNow(p: V3, radius = 0.08): boolean {
     return isInView(this.head, this.fov, p, radius, 9 * DEG);
@@ -399,7 +413,7 @@ export class Game {
           g.animateTo({}, 0, 0.6);
           setTimeout(() => {
             g.entity.dispose();
-            this.guestProps.delete(plan.id);
+            if (this.guestProps.get(plan.id) === g) this.guestProps.delete(plan.id);
           }, 800);
         }
         break;
@@ -499,6 +513,26 @@ export class Game {
       }
     }
     this.emit({ type: 'snap', frame, eye, dir, framedIds: ids, caught });
+    // Put things right only now, after the photo has captured them changed.
+    for (const plan of this.pendingUndo.splice(0)) this.undoTrick(plan);
+  }
+
+  /** Back to the start (the player left the immersive session). */
+  reset(): void {
+    for (const p of this.props.values()) p.entity.dispose();
+    for (const g of this.guestProps.values()) g.entity.dispose();
+    if (this.night) for (const a of this.night.active.values()) this.realEffects?.deactivate(a.plan);
+    this.props.clear();
+    this.guestProps.clear();
+    this.focus.clear();
+    this.pendingUndo = [];
+    this.night = null;
+    this.room = null;
+    this.tops = [];
+    this.seat = null;
+    this.boardAt = null;
+    this.watchCount = -1;
+    this.setPhase('lobby');
   }
 
   private onNightEvent(e: NightEvent): void {
@@ -511,7 +545,7 @@ export class Game {
         const at: V3[] = [];
         for (const plan of e.plans) {
           at.push(...(this.focus.get(plan.id) ?? []));
-          this.undoTrick(plan);
+          this.pendingUndo.push(plan);
         }
         if (!this.firstCatchDone) {
           this.firstCatchDone = true;
@@ -561,6 +595,30 @@ export class Game {
 
   setPaused(p: boolean): void {
     this.paused = p;
+  }
+
+  /** For automated tests and the room report. */
+  roomReport(): Record<string, unknown> {
+    const r = this.room;
+    const byLabel: Record<string, number> = {};
+    for (const x of r?.reals ?? []) byLabel[x.label] = (byLabel[x.label] ?? 0) + 1;
+    const bearings = [...this.props.values()].map((p) => {
+      const dx = p.cur.pos.x - (this.seat?.head.x ?? 0);
+      const dz = p.cur.pos.z - (this.seat?.head.z ?? 0);
+      let b = (this.seat?.yaw ?? 0) - Math.atan2(-dx, -dz);
+      b = Math.atan2(Math.sin(b), Math.cos(b));
+      return Math.round((b * 180) / Math.PI);
+    });
+    return {
+      meshes: r?.meshCount ?? 0,
+      planes: r?.planeCount ?? 0,
+      tops: this.tops.filter((t) => !t.synthetic).length,
+      syntheticShelves: this.syntheticTops.length,
+      realThings: byLabel,
+      props: this.props.size,
+      propBearingsDeg: bearings.sort((a, b) => a - b),
+      board: this.boardAt != null,
+    };
   }
 
   /** For automated tests: what is currently changed, and where to look. */

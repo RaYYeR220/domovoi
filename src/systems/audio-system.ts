@@ -60,6 +60,7 @@ export class AudioDirectorSystem extends createSystem({}) {
           if (this.musicBox) AudioUtils.pause(this.musicBox, 3);
           this.crickets ??= this.loop(A('night-crickets-loop.ogg'), 0.2);
           AudioUtils.play(this.crickets, 3);
+          if (this.clock) AudioUtils.play(this.clock, 1);
           this.once('wood-creak.mp3', 0.25);
         }
         if (e.phase === 'dawn') {

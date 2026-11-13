@@ -37,6 +37,8 @@ export interface NightOptions {
   gapEnd: number;
   /** Force the very first trick (used by the first-night tutorial). */
   firstKind?: AnomalyKind;
+  /** Prefix for trick ids, so ids stay unique across nights in one session. */
+  idPrefix?: string;
 }
 
 export const DEFAULT_NIGHT: Omit<NightOptions, 'seed' | 'nightIndex'> = {
@@ -93,6 +95,7 @@ export class Night {
   private falseReports = 0;
   private tricks = 0;
   private result: NightResult | null = null;
+  private readonly recentKinds: AnomalyKind[] = [];
 
   constructor(opts: Partial<NightOptions> & Pick<NightOptions, 'seed' | 'nightIndex'>) {
     this.opts = { ...DEFAULT_NIGHT, ...opts };
@@ -242,7 +245,10 @@ export class Night {
             const fits = unseen.some(d.appliesTo);
             if (!fits) return 0;
             const closeness = 1 / (1 + Math.abs(d.subtlety - want));
-            return closeness * closeness;
+            // Variety: the same trick twice in a row is much less likely.
+            const recent = this.recentKinds.lastIndexOf(d.kind);
+            const fresh = recent < 0 ? 1 : recent === this.recentKinds.length - 1 ? 0.15 : 0.45;
+            return closeness * closeness * fresh;
           });
       if (!def) return null;
       const targets = unseen
@@ -261,7 +267,7 @@ export class Night {
       if (def.arity === 2 && !partner) continue;
       const intensity = 1 - this.progress;
       const plan: AnomalyPlan = {
-        id: `t${++this.seq}`,
+        id: `${this.opts.idPrefix ?? ''}t${++this.seq}`,
         kind: def.kind,
         targetId: target.id,
         partnerId: partner?.id,
@@ -269,7 +275,11 @@ export class Night {
         subtlety: def.subtlety,
         at: this.clock,
       };
-      if (room.apply(plan)) return plan;
+      if (room.apply(plan)) {
+        this.recentKinds.push(plan.kind);
+        if (this.recentKinds.length > 3) this.recentKinds.shift();
+        return plan;
+      }
       this.seq--;
       if (forced) return null;
     }

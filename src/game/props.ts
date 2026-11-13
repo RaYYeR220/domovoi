@@ -138,10 +138,16 @@ export class Prop {
     });
   }
 
-  /** Where the eye should look to "see" this prop. */
+  private readonly centerCache: V3 = { x: 0, y: 0, z: 0 };
+
+  /** Where the eye should look to "see" this prop (cached object, updated on read). */
   get center(): V3 {
     const p = this.cur.pos;
-    return { x: p.x, y: p.y + (this.cur.flip ? this.height * 0.5 : this.height * 0.5), z: p.z };
+    const c = this.centerCache;
+    c.x = p.x;
+    c.y = p.y + this.height * 0.5 * this.cur.scale;
+    c.z = p.z;
+    return c;
   }
 
   get hidden(): boolean {

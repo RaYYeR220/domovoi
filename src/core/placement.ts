@@ -276,7 +276,10 @@ export function seatFromHead(head: V3, orientation: Quat): Seat {
 /** Clamp a point to stay on a top (used by the "shift" trick). */
 export function clampToTop(top: Top, p: V3, margin = 0.06): V3 {
   const rel = sub(p, top.center);
-  const s = Math.max(-(top.halfU - margin), Math.min(top.halfU - margin, dot(rel, top.u)));
-  const t = Math.max(-(top.halfV - margin), Math.min(top.halfV - margin, dot(rel, top.v)));
+  // On a narrow top the margin can't exceed the half size (or the clamp would flip).
+  const mu = Math.max(0, top.halfU - Math.min(margin, top.halfU - 0.005));
+  const mv = Math.max(0, top.halfV - Math.min(margin, top.halfV - 0.005));
+  const s = Math.max(-mu, Math.min(mu, dot(rel, top.u)));
+  const t = Math.max(-mv, Math.min(mv, dot(rel, top.v)));
   return addScaled(addScaled({ ...top.center }, top.u, s), top.v, t, v3());
 }

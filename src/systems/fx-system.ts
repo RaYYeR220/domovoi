@@ -6,7 +6,8 @@
 
 import { Group, Quaternion, Vector3, createSystem, type Entity } from '@iwsdk/core';
 import type { AnomalyPlan } from '../core/anomalies.js';
-import { type V3, yawOf } from '../core/vec.js';
+import { isInView } from '../core/attention.js';
+import { DEG, type V3, yawOf } from '../core/vec.js';
 import type { Game, GameEvent, RealEffects } from '../game/game.js';
 import type { Prop } from '../game/props.js';
 import type { RealThing } from '../game/room.js';
@@ -195,7 +196,10 @@ export class FxSystem extends createSystem({}) {
     return this.hq.set(o.x, o.y, o.z, o.w);
   }
 
+  private lastT = 0;
+
   update(dt: number, t: number): void {
+    this.lastT = t;
     // Spirit motion and presence.
     if (this.game.phase === 'night' && this.glimpseUntil > 0 && this.game.time > this.glimpseUntil) {
       this.glimpseUntil = 0;
@@ -241,7 +245,7 @@ export class FxSystem extends createSystem({}) {
       const o = this.overlays.get(plan.id);
       if (!o) return;
       o.visual.setActive(false);
-      o.disposeAt = performance.now() / 1000 + 1.5;
+      o.disposeAt = this.lastT + 1.5;
     },
   };
 
@@ -297,6 +301,11 @@ export class FxSystem extends createSystem({}) {
       }
       default:
         return null;
+    }
+    // Never let a change appear where the player can see it happen.
+    if (isInView(this.game.head, this.game.fov, focus, Math.max(real.size.x, real.size.y) * 0.5, 9 * DEG)) {
+      visual.dispose();
+      return null;
     }
     holder.add(visual.object);
     const entity = this.world.createTransformEntity(holder);
