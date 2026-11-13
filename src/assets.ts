@@ -7,7 +7,7 @@ const model = (file: string, name: string) => ({
   url: url(`models/${file}`),
   type: AssetType.GLTF,
   name,
-  priority: 'background' as const,
+  priority: 'lazy' as const,
 });
 
 export default defineAssets({

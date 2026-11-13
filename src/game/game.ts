@@ -102,6 +102,8 @@ export class Game {
   fov: Fov = QUEST3_FOV;
   paused = false;
   realEffects: RealEffects | null = null;
+  /** Where the evidence board hangs (set once it is up). */
+  boardAt: V3 | null = null;
   /** Where each active trick can be seen (for framing). */
   private readonly focus = new Map<string, V3[]>();
   private readonly guestProps = new Map<string, Prop>();
@@ -204,9 +206,12 @@ export class Game {
 
   startNight(): void {
     const first = !this.save.introduced;
+    const lengthParam = Number(new URLSearchParams(location.search).get('length'));
+    const duration = Number.isFinite(lengthParam) && lengthParam >= 30 && lengthParam <= 900 ? lengthParam : undefined;
     this.night = new Night({
       seed: this.tonight.seed,
       nightIndex: this.tonight.index,
+      ...(duration ? { duration, gapStart: Math.min(26, duration / 8), gapEnd: Math.min(11, duration / 16) } : {}),
       firstKind: first ? (this.hasProp('candle') ? 'state' : 'vanish') : undefined,
       firstDelay: first ? 3 : 12,
     });

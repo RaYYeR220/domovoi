@@ -61,6 +61,8 @@ export class FxSystem extends createSystem({}) {
       this.world.createTransformEntity(b.object, { parent: this.world.sceneEntity, persistent: true });
     }
 
+    const hidden = ((this.globals as Record<string, unknown>).photoHidden ??= []) as import('@iwsdk/core').Object3D[];
+    hidden.push(this.viewfinder.object, ...this.bursts.map((b) => b.object));
     this.game.realEffects = this.realEffects;
     this.cleanupFuncs.push(this.game.on((e) => this.onGame(e)));
   }

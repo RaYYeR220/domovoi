@@ -5,6 +5,7 @@
  */
 
 import {
+  AssetManager,
   Matrix4,
   Quaternion,
   Vector3,
@@ -51,7 +52,10 @@ export class GameSystem extends createSystem({
     (this.globals as Record<string, unknown>).game = this.game;
     (this.globals as Record<string, unknown>).gesture = this.gesture;
     (this.globals as Record<string, unknown>).hands = this.hands;
-    if (import.meta.env.DEV) (window as unknown as { __domovoi: Game }).__domovoi = this.game;
+    if (import.meta.env.DEV) {
+      (window as unknown as { __domovoi: Game }).__domovoi = this.game;
+      (window as unknown as { __assets: typeof AssetManager }).__assets = AssetManager;
+    }
     preloadProps().then(() => {
       this.assetsReady = true;
     });

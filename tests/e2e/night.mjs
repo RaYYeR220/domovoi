@@ -87,6 +87,22 @@ export async function run({ page, frame, workspaceRoot }) {
   await shot('04-caught');
   await remote('set_hand_pose', { device: 'hand-left', poseId: 'default' });
   await remote('set_hand_pose', { device: 'hand-right', poseId: 'default' });
+  await remote('set_transform', { device: 'hand-left', position: { x: -0.25, y: 0.9, z: -0.3 } });
+  await remote('set_transform', { device: 'hand-right', position: { x: 0.25, y: 0.9, z: -0.3 } });
+  await sleep(1600);
+  await shot('05-developing');
+  const board = await app.evaluate(() => window.__domovoi.boardAt);
+  if (board) {
+    await sleep(2600);
+    await remote('look_at', { device: 'headset', target: board });
+    await sleep(1400);
+    await shot('06-board');
+    log.push(`board at (${board.x.toFixed(2)}, ${board.y.toFixed(2)}, ${board.z.toFixed(2)})`);
+  } else {
+    log.push('board: none');
+  }
+  await remote('set_hand_pose', { device: 'hand-left', poseId: 'default' });
+  await remote('set_hand_pose', { device: 'hand-right', poseId: 'default' });
   return log.join('\n');
 }
 

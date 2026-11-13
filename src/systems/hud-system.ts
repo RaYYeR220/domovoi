@@ -89,6 +89,8 @@ export class HudSystem extends createSystem({
     this.world.createTransformEntity(this.dialGroup, { parent: this.world.sceneEntity, persistent: true });
     this.dialGroup.visible = false;
 
+    const hidden = ((this.globals as Record<string, unknown>).photoHidden ??= []) as import('@iwsdk/core').Object3D[];
+    hidden.push(this.hint.mesh, this.dialGroup);
     this.cleanupFuncs.push(this.game.on((e) => this.onGame(e)));
     this.queries.pressed.subscribe('qualify', (entity) => {
       this.onButton(entity.getValue(UIButton, 'action') as string);
@@ -258,6 +260,7 @@ export class HudSystem extends createSystem({
     root.position.set(head.x + dir.x * 0.75, head.y - 0.12, head.z + dir.z * 0.75);
     root.rotation.set(-0.12, yaw, 0, 'YXZ');
     this.dawnRoot = this.world.createTransformEntity(root);
+    ((this.globals as Record<string, unknown>).photoHidden as import('@iwsdk/core').Object3D[] | undefined)?.push(root);
 
     const panel = new CanvasPanel(0.46, 0.3, 2200);
     this.dawnPanels.push(panel);
