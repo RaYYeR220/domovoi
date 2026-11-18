@@ -3,7 +3,7 @@
  * frame, placement, progress) to the live XR room.
  */
 
-import { Vector3, type World } from '@iwsdk/core';
+import { type Entity, Vector3, type World } from '@iwsdk/core';
 import type { AnomalyPlan, Candidate, PropKind } from '../core/anomalies.js';
 import { AttentionTracker, type Fov, QUEST3_FOV, type Pose, isInView } from '../core/attention.js';
 import { type Frame, coneContains, frameContains } from '../core/frame-gesture.js';
@@ -30,6 +30,7 @@ import {
 import { createRng } from '../core/rng.js';
 import { DEG, type V3, distance, yawOf } from '../core/vec.js';
 import { Prop } from './props.js';
+import { hangSpiritShelves } from './shelves.js';
 import type { RealThing, RoomModel } from './room.js';
 
 export type Phase = 'lobby' | 'scanning' | 'arrival' | 'night' | 'dawn';
@@ -172,6 +173,7 @@ export class Game {
       spots = chooseSpots(candidateSpots(tops, this.seat), 8, rng, 0.2);
     }
     this.tops = tops;
+    this.shelves = hangSpiritShelves(this.world, tops);
     const kinds = FIRST_SET.slice(0, spots.length);
     const placements = assignProps(kinds, spots, tops, this.seat);
     // Bring things in from the centre outwards so the first few land in view.
@@ -180,6 +182,9 @@ export class Game {
     this.arrivalTimer = 1.2;
     this.setPhase('arrival');
   }
+
+  /** The spirit's own shelves, when the room had too few surfaces. */
+  private shelves: Entity[] = [];
 
   get syntheticTops(): Top[] {
     return this.tops.filter((t) => t.synthetic);
@@ -530,6 +535,8 @@ export class Game {
 
   /** Back to the start (the player left the immersive session). */
   reset(): void {
+    for (const s of this.shelves) s.dispose();
+    this.shelves = [];
     for (const p of this.props.values()) p.entity.dispose();
     for (const g of this.guestProps.values()) g.entity.dispose();
     if (this.night) for (const a of this.night.active.values()) this.realEffects?.deactivate(a.plan);

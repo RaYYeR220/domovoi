@@ -201,8 +201,9 @@ export class EvidenceSystem extends createSystem({
     } else {
       // No walls known: the board leans in the air, front-left, facing you.
       const yaw = seat.yaw + 0.55;
-      this.boardGroup.position.set(seat.head.x - Math.sin(yaw) * 1.5, seat.head.y + 0.05, seat.head.z - Math.cos(yaw) * 1.5);
-      this.boardGroup.lookAt(seat.head.x, seat.head.y + 0.05, seat.head.z);
+      // A little above eye level, clear of the spirit's own shelves below it.
+      this.boardGroup.position.set(seat.head.x - Math.sin(yaw) * 1.5, seat.head.y + 0.4, seat.head.z - Math.cos(yaw) * 1.5);
+      this.boardGroup.lookAt(seat.head.x, seat.head.y + 0.4, seat.head.z);
     }
     this.board = visuals.createBoard(BOARD_W, BOARD_H);
     this.boardGroup.add(this.board.object);
